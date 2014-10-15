@@ -1,5 +1,7 @@
-p {
-  font-family: Verdana, serif;
+*{
+  font-family: "Arial Black", Arial, serif;
+  letter-spacing: -1px;
+  font-weight: bold;
 }
 
 body {
@@ -9,6 +11,7 @@ body {
 
 a {
   text-decoration: none;
+  color: black;
 }
 
 body > div {
@@ -32,32 +35,51 @@ body > div {
 }
 
 #mainBody {
+  /*padding-right: 15%;*/
+  /*padding-left: 15%;*/
   height: 500px;
   width: 88.45%;
   background-color: #009999;
   float: right;
 }
 
-.colButton {
+.colButton, .colButtonSelected {
   margin: 5px auto;
   border-radius: 5px;
   height: 70px;
   width: 90%;
-  background-color: #5ce6e6;
+  text-align: center;
 }
 
-.colButton:hover {
-  background-color: #006666;
+.colButton {
+  background-color: #70dbdb;
 }
 
 .colButtonSelected {
-  margin: 5px auto;
-  border-radius: 5px;
-  height: 70px;
-  width: 90%;
   background-color: #52cca3;
 }
 
-.colButtonSelected:hover {
-  background-color: #006666;
+.colButton:hover, .colButtonSelected:hover {
+  background-color: #b2ffe6;
 }
+
+#circle {
+  width: 30px;
+  height: 30px;
+  color: #cc0099;
+  margin: auto 30px auto auto;
+  border-radius: 100%;
+  float: right;
+}
+
+#circle:hover {
+  -webkit-animation: bounce 5s; /* Chrome, Safari, Opera */
+  animation: bounce 5s;
+}
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes bounce {
+    from {background: red;}
+    to {background: yellow;}
+}
+
