@@ -1,44 +1,46 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <link type="text/css" rel="stylesheet" href="stylesheet.css" />
-  <script src="javaScript.js"></script>
-  <title>index</title>
+	<title> Home </title>
+	<link rel="stylesheet" type="text/css" href="parchment.css">
+	<link href='http://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
+  <script src="test1js.js"></script>
 </head>
-<body onLoad="init();">
+
+<body>
   <div id="header">
-    <cavas id="myCanvas" width="100%" height="100%"></cavas>
+    <img src="parchment.png" />
+    <h1>Home</h1>
   </div>
-  
-  <div id="column">
+  <div id="tabs">
     <a href="index.html">
-      <div class="colButtonSelected">
+      <div class="tab">
+        <img src="strip2.png" />
         <p>Home</p>
       </div>
     </a>
-    
     <a href="aboutMe.html">
-      <div class="colButton">
+      <div class="tab">
+        <img src="strip3.png" />
         <p>About Me</p>
       </div>
     </a>
-    
     <a href="htmlPage.html">
-      <div class="colButton">
-        <p>HTML Page</p>
+      <div class="tab">
+        <img src="strip2.png" />
+        <p>Html</p>
       </div>
     </a>
-    
-    <a href="computerHardWare.html">
-      <div class="colButton">
-        <p>Computer HardWare</p>
+    <a href="computerHardware.html">
+      <div class="tab">
+        <img src="strip3.png" />
+        <p>Computer Hardware</p>
       </div>
     </a>
   </div>
-  
   <div id="mainBody">
-  <div id="mainBodyText">
+    <img src="parchment.png" />
+    <div id="mainBodyInner">
     <h1>Home</h1>
     <h3>Welcome</h3>
     <p>A welcome to the website</p>
@@ -48,7 +50,7 @@
     <p>Why are we taking this class? What are we learning? What will we accomplish?</p>
     <h3>Overview of the Content on the webpage</h3>
     <p>What else can someone find on your web page?</p>
-  </div>
+    </div>
   </div>
 </body>
 </html>
