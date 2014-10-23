@@ -10,11 +10,11 @@ body {
   width: 1100px;
   height: 200px;
   /*box-shadow: 0px 10px 5px #000000;*/
-  z-index: 2;
+  z-index: 30;
   position: relative;
   margin: auto auto;
   /*visibility: hidden;*/
-  /*border: 2px solid black;*/
+  border: 2px solid green;
 }
 
 #header > h1 {
@@ -31,14 +31,14 @@ body {
 }
 
 #tabs {
-  z-index: 0;
+  z-index: 10;
   width: 1100px;
   height: 150px;
   position: relative;
   top: -100px;
   margin: auto auto;
   /*background-color: #fff;*/
-  /*border: 2px solid white;*/
+  border: 2px solid white;
 }
 
 .tab {
@@ -46,7 +46,7 @@ body {
   height: 100%;
   margin: auto auto auto 8%;
   display: inline-block;
-  /*border: 2px solid black;*/
+  border: 2px solid black;
   transition: transform .5s;
 }
 
@@ -56,6 +56,7 @@ body {
   top: -40%;
   font-size: 15px;
 }
+
 #tabs > a {
   color: #000000;
   text-decoration: none;
@@ -78,11 +79,13 @@ body {
 #mainBody {
   width: 1100px;
   height: 1000px;
-  z-index: -2;
+  background-image: url('parchment180.png');
+  background-size: 100% 100%;
+  z-index: -10;
   position: relative;
   margin: auto auto;
   top: -200px;
-  /*border: 2px solid purple;*/
+  border: 2px solid purple;
 }
 
 #mainBody > img {
@@ -94,8 +97,9 @@ body {
 #mainBodyInner {
   width: 800px;
   height: 800px;
-  /*border: 2px solid red;*/
-  position: absolute;
+  border: 2px solid red;
+  z-index: 75;
+  position: relative;
   top: 130px;
   left: 150px;
 }
