@@ -13,8 +13,8 @@ body {
   z-index: 30;
   position: relative;
   margin: auto auto;
-  /*visibility: hidden;*/
-  border: 2px solid green;
+  visibility: hidden;
+  /*border: 2px solid green;*/
 }
 
 #header > h1 {
@@ -38,7 +38,7 @@ body {
   top: -100px;
   margin: auto auto;
   /*background-color: #fff;*/
-  border: 2px solid white;
+  /*border: 2px solid white;*/
 }
 
 .tab {
@@ -46,7 +46,7 @@ body {
   height: 100%;
   margin: auto auto auto 8%;
   display: inline-block;
-  border: 2px solid black;
+  /*border: 2px solid black;*/
   transition: transform .5s;
 }
 
@@ -81,10 +81,10 @@ body {
   height: 1000px;
   background-image: url('parchment180.png');
   background-size: 100% 100%;
-  z-index: -10;
+  /*z-index: -10;*/
   position: relative;
   margin: auto auto;
-  top: -200px;
+  top: -235px;
   border: 2px solid purple;
 }
 
@@ -97,8 +97,8 @@ body {
 #mainBodyInner {
   width: 800px;
   height: 800px;
-  border: 2px solid red;
-  z-index: 75;
+  /*border: 2px solid red;*/
+  /*z-index: 75;*/
   position: relative;
   top: 130px;
   left: 150px;
