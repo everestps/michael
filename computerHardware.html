@@ -5,6 +5,9 @@
   <script src="jquery.js" type="text/javascript"></script>
   <script src="facebox.js" type="text/javascript"></script>
   <script type="text/javascript">
+    $(document).bind('beforeReveal.facebox', function() {
+      $('#facebox .body').width('600px');
+    });
     jQuery(document).ready(function($) {
       $('a[rel*=facebox]').facebox({
         loadingImage : 'loading.gif',
@@ -57,10 +60,18 @@
     <!--<img src="parchment.png" />-->
     <div id="mainBodyInner">
       <h1>Computer HardWare</h1>
-      <p>What is a motherboard and what does it do? What is a CPU and what does it do? What is RAM and what does it? What is a hard drive and what does it do? How do the different components communicate with one another? What are the keyboard, mouse, and monitor and what do they do?</p>
-      <a href="strip2.png" rel="facebox">Terms</a>
+      <p>This is the motherboard: <a href="compImgs/mobo.jpg" rel="facebox"><img src="compImgs/mobo.jpg" /></a> The motherboard is a printed control board (PCB) that contains 
+      computer units and connects different processes to eachother. <br>
+      This is the Central Processing Unit (CPU): <a href="compImgs/cpu.jpg" rel="facebox"><img src="compImgs/cpu.jpg" /></a> The purpose of this part is to take actions from a 
+      computer program and control the rest of the system. <br>
+      This is the Random Access Memory (RAM): <a href="compImgs/ram.jpg" rel="facebox"><img src="compImgs/ram.jpg" /></a> The RAM is a type of memory storage that allows memory
+      to be read at a consistant speed.<br>
+      This is the Hard Disc Drive (HDD): <a href="compImgs/hdd.jpg" rel="facebox"><img src="compImgs/hdd.jpg" /></a> The HDD is a type of memory storage that stores most of the 
+      files of a computer.<br>
+      <br>
+      The components each have a different job to do in the computer and they work with eachother through the motherboard. The keyboard, mouse and monitor are the users way of 
+      interacting with the computer. A mondern computer cannot function properly if it is missing any of these parts.</p>
       
-      <a href="http://www.google.com">Terms</a>
     </div>
   </div>
 </body>
