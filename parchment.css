@@ -104,12 +104,27 @@ body {
   left: 150px;
 }
 
-#mainBodyInner > p > a > img {
+.compPhotos {
   height: 75px;
   width: 150px;
 }
 
-/*#facebox .body {*/
-/*  width: 500px !important;*/
-/*  height: 250px !important;*/
-/*}*/
+.computerLeftDiv {
+   float: left; 
+   height: 125px; 
+   width: 75%;
+   /*padding-right: 10px;*/
+}
+
+.computerRightDiv {
+  float: right; 
+  height: 125px; 
+  width: 25%;
+}
+
+#computerBottomParagraph {
+  height: 125px;
+  width: 100%;
+  /*border: green 2px solid;*/
+  float: left;
+}
