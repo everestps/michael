@@ -1,0 +1,41 @@
+body{
+	background-color: #FFFFFF;
+}
+
+#display{
+    background-color: #C0C0C0;
+	width:180px;
+	height: 50px;
+	border: 1px solid black;
+	margin-bottom: 5px;
+	text-align:right;
+}
+
+.row{
+    
+}
+
+#calculator{
+  border: 5px solid black;
+  margin-right: 75%;
+  background-color: #503E4E;
+}
+
+.button{
+	background-color: #EEDE05;
+	display:inline-block;
+	height: 50px;
+	width: 50px;
+	border: 1px solid black;
+	text-align:center;
+	transition: all 0.5s ease;
+}
+
+.button:hover{
+	background-color: #C97B06;
+}
+
+
+.opp{
+	background-color: #C93A06;
+}
