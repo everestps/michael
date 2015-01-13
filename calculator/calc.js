@@ -1,4 +1,3 @@
-
 var keys = document.querySelectorAll("div.button");
 
 for(var i = 0; i < keys.length; i++) {

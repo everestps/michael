@@ -1,5 +1,9 @@
 canvas{
-  height: 500px;
-  width: 500px;
-  border: 5px solid black;
+  border-width: 10px;
+  border-style: inset;
+  border-color: green;
+}
+
+body{
+  padding-left: 300px;
 }

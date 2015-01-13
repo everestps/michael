@@ -1,0 +1,42 @@
+//declare starting enemy positions, speed, direction, number of enemies (delayed)wall coordinates
+
+//(delayed)draw walls
+
+//create enemy array
+//for loop that pushes desired number of enemies into enemy array
+
+//enemy object constructor function
+//enemy is an array that has these attributes: x, y, direction, speed,
+
+//tower object constructor functions
+//
+
+//step method
+//start equals the current time but only if the start variable is null
+//progress equals the time minus the start
+//runGame function fires
+//runs window.requestAnimationFrame(step);
+
+//window.requestAnimationFrame(step);
+//tells the browser that you want to run the step function before the bowser repaints
+
+//runGame function
+//for loop that tells enemies to move
+//tells the enemies to move function
+//runs drawEverything function
+
+//drawEverything functions
+//canvas is cleared
+//for loop that draws enemies
+//for loop that draws towers
+
+//enemiesMove function
+//if the direction is "right" add speed to x coordinates
+//(delayed)if the direction is left subtract speed from the x coordinate
+//(delayed)if the direction is up subtract speed from the y coordinate
+//(delayed)if the direction is down add speed to the x coordinate
+
+//enemyRedraw function
+//drawsCircle at enemies coordinates
+
+//run window.requestAnimationFrame(step);
