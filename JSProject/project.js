@@ -9,20 +9,23 @@ var DOWN = 3;
 var INVERSE_SPAWN_RATE = 100;
 var NUM_HORIZONTAL_NODES = 20;
 var NUM_VERTICAL_NODES = 10;
+var NODE_WIDTH = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
+var NODE_HEIGHT = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
 var ENEMY_START_X = 110;
 var ENEMY_START_Y = 120;
-var ENEMY_START_RADIUS = 10;
 var ENEMY_START_HEALTH = 1000;
 var ENEMY_SPEED = 3;
 var ENEMY_START_DIRECTION = RIGHT;
 var ENEMY_COLOR = "#FFFF00";
 var ENEMY_OUTLINE_COLOR = "#000000";
 var MAX_ENEMIES = 10;
-if(CANVAS_WIDTH / NUM_HORIZONTAL_NODES > CANVAS_HEIGHT / NUM_VERTICAL_NODES){
-  var TOWER_SIDE_LENGTH = (CANVAS_HEIGHT / NUM_VERTICAL_NODES) - 10;
+if(NODE_WIDTH > NODE_HEIGHT){
+  var TOWER_SIDE_LENGTH = (NODE_HEIGHT) - 10;
+  var ENEMY_START_RADIUS = (NODE_HEIGHT) / 2 - 10;
 }
 else{
-  var TOWER_SIDE_LENGTH = (CANVAS_WIDTH / NUM_HORIZONTAL_NODES) - 10;
+  var TOWER_SIDE_LENGTH = (NODE_WIDTH) - 10;
+  var ENEMY_START_RADIUS = (NODE_WIDTH) / 2- 10;
 }
 var TOWER_RANGE = 200;
 var TOWER_DAMAGE = 1;
@@ -38,21 +41,21 @@ var enemies = [];
 var enemySpawnCounter = -1;
 var phantomTower = new PhantomTower(PHANTOM_TOWER_START_X, PHANTOM_TOWER_START_Y);
 c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
+var directors = [];
 
 var nodeCoordinates = determineArrayNodeCoordinates();
+createDirectors();
 
 function determineArrayNodeCoordinates(){
-  var nodeWidth = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
-  var nodeHeight = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
-  var nodeWidthStart = nodeWidth / 2;
-  var nodeHeightStart = nodeHeight / 2;
+  var nodeWidthStart = NODE_WIDTH / 2;
+  var nodeHeightStart = NODE_HEIGHT / 2;
   var nodeXCoordinates = [];
   var nodeYCoordinates = [];
   for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
-    nodeXCoordinates.push(nodeWidthStart + (nodeWidth * i));
+    nodeXCoordinates.push(nodeWidthStart + (NODE_WIDTH * i));
   }
   for(i = 0; i < NUM_VERTICAL_NODES; i++){
-    nodeYCoordinates.push(nodeHeightStart + (nodeHeight * i));
+    nodeYCoordinates.push(nodeHeightStart + (NODE_HEIGHT * i));
   }
   var nodeCoordinates = {
     xCoordinates: nodeXCoordinates, 
@@ -77,7 +80,6 @@ c.addEventListener('click', function(evt){createTowerWithMousePos(evt)});
 c.addEventListener('mousemove', function(evt){movePhantomTower(evt)});
 
 function createTowerWithMousePos(evt) {
-  displayBox.innerHTML = "here";
   var mousePos = getMousePosInCanvas(c, evt);
   mousePos.x = quantizeXToGrid(mousePos.x);
   mousePos.y = quantizeYToGrid(mousePos.y);
@@ -88,7 +90,8 @@ function movePhantomTower(evt){
   var mousePos = getMousePosInCanvas(c, evt);
   phantomTower.x = mousePos.x;
   phantomTower.y = mousePos.y;
-  displayBox.innerHTML = phantomTower.x + ", " + phantomTower.y;
+  phantomTower.x = quantizeXToGrid(phantomTower.x);
+  phantomTower.y = quantizeYToGrid(phantomTower.y);
 }
 
 function quantizeXToGrid(xIn){
@@ -181,6 +184,14 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
     this.health -= damageTaken;
     if(this.health <= 0) this.die();
   };
+  this.directIfInRange = function(directorIn){
+    displayBox.innerHTML = "serious";
+    var distance = distanceBetweenPoints(this.x, this.y, this.directorIn.x, this.directorIn.y);
+    displayBox.innerHTML = "works";
+    if(distance < (this.speed * 2)){
+      this.direction = this.directorIn.direction;
+    }
+  };
 }
 
 
@@ -203,6 +214,7 @@ function Tower(xIn, yIn) {
     TOWER_SIDE_LENGTH, TOWER_SIDE_LENGTH);
     if(this.firing && this.target.alive){
       changeCanvasColor(LAZER_COLOR);
+      ctx.beginPath();
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.target.x, this.target.y);
       ctx.stroke();
@@ -224,10 +236,10 @@ function Tower(xIn, yIn) {
     }
   };
   this.checkIfShootable = function(){
-    var xDifferenceSquared = Math.pow((this.x - this.target.x), 2);
-    var yDifferenceSquared = Math.pow((this.y - this.target.y), 2);
-    var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
-    var distance = Math.sqrt(sumOfXDiffAndYDiff);
+    // var xDifferenceSquared = Math.pow((this.x - this.target.x), 2);
+    // var yDifferenceSquared = Math.pow((this.y - this.target.y), 2);
+    // var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
+    var distance = distanceBetweenPoints(this.x, this.y, this.target.x, this.target.y);
     if(distance <= TOWER_RANGE && this.target.alive){
       this.fire();
     }
@@ -239,6 +251,20 @@ function Tower(xIn, yIn) {
     this.target = newTarget;
     this.checkIfShootable();
   };
+}
+
+function distanceBetweenPoints(x1, y1, x2, y2){
+  var xDifferenceSquared = Math.pow((x1 - x2), 2);
+  var yDifferenceSquared = Math.pow((y1 - y2), 2);
+  var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
+  var distance = Math.sqrt(sumOfXDiffAndYDiff);
+  return distance;
+}
+
+function Director(xIn, yIn, directionIn){
+  this.x = quantizeXToGrid(xIn);
+  this.y = quantizeYToGrid(yIn);
+  this.direction = directionIn;
 }
 
 function PhantomTower(xIn, yIn){
@@ -278,6 +304,9 @@ function step(timestamp) {
   }
 }
 
+function createDirectors(){
+  directors.push(new Director(ENEMY_START_X + 200, ENEMY_START_Y, DOWN));
+}
 
 //window.requestAnimationFrame(step);
 //tells the browser that you want to run the step function before the bowser repaints
@@ -288,6 +317,7 @@ function runGame(){
   //run for loop for entire enemy array that runs the following functions for every enemy
   runEnemySpawner();
   towersCheckEnemies();
+  enemiesCheckDirectors();
   drawEverything();
   moveEverything();
 }
@@ -325,10 +355,18 @@ function moveEverything(){
 **to see if any enemies are within range of any towers.
 */
 function towersCheckEnemies(){
-  for(var j = 0; j < towers.length; j++){
-    if(towers[j].firing) towers[j].checkIfShootable();
-    for(var i = enemies.length - 1; i >= 0 && !towers[j].firing; i--){
-      towers[j].sendNewTargetToCheck(enemies[i]);
+  for(var i = 0; i < towers.length; i++){
+    if(towers[i].firing) towers[i].checkIfShootable();
+    for(var j = enemies.length - 1; j >= 0 && !towers[i].firing; j--){
+      towers[i].sendNewTargetToCheck(enemies[j]);
+    }
+  }
+}
+
+function enemiesCheckDirectors(){
+  for(var i = 0; i < enemies.length; i++){
+    for(var j = 0; j < directors.length; j++){
+      enemies[i].directIfInRange(directors[j]);
     }
   }
 }
