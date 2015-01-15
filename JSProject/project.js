@@ -123,7 +123,7 @@ function Tower(xIn, yIn) {
   this.draw = function() {
     ctx.fillRect(this.x - TOWER_SIDE_LENGTH / 2, this.y - TOWER_SIDE_LENGTH / 2, 
     TOWER_SIDE_LENGTH, TOWER_SIDE_LENGTH);
-    if(this.firing){
+    if(this.firing && this.target.alive){
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.target.x, this.target.y);
       ctx.stroke();
