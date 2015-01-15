@@ -1,9 +1,17 @@
+#displayBox{
+  width: 250px;
+  height: 200px;
+  border: 5px solid black;
+  float: left;
+}
+
 canvas{
   border-width: 10px;
   border-style: inset;
   border-color: green;
+  float: right;
 }
 
 body{
-  padding-left: 300px;
+  /*padding-left: 100px;*/
 }

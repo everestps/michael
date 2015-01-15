@@ -1,19 +1,25 @@
 var CANVAS_BORDER_WIDTH = 30;
 var RIGHT = 0;
-var Left = 1;
+var LEFT = 1;
 var UP = 2;
 var DOWN = 3;
 var ENEMY_START_X = 100;
 var ENEMY_START_Y = 100;
 var ENEMY_START_RADIUS = 10;
+var ENEMY_START_HEALTH = 25;
 var ENEMY_SPEED = 3;
 var ENEMY_START_DIRECTION = RIGHT;
-var NUM_ENEMIES = 1;
+var MAX_ENEMIES = 10;
 var TOWER_SIDE_LENGTH = 50;
 var TOWER_RANGE = 200;
-var c = document.getElementById("myCanvas"); //
+var TOWER_DAMAGE = 1;
+var c = document.getElementById("myCanvas"); 
 var ctx = c.getContext("2d");
-//(delayed)draw walls
+var displayBox = document.getElementById("displayBox");
+var dBox = displayBox.innerHTML;
+var enemies = [];
+var enemySpawnCounter = -1;
+displayBox.innerHTML = enemySpawnCounter;
 c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
 
 /*This function returns the mouse x and y coordinates in
@@ -21,7 +27,7 @@ c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
 **coordinates relative to the top, left corner of the 
 **canvas.
 */
-function getMousePos(c, evt) {
+function getMousePosInCanvas(c, evt) {
   var rect = c.getBoundingClientRect();
   return {
     x: evt.clientX - rect.left - CANVAS_BORDER_WIDTH,
@@ -30,21 +36,17 @@ function getMousePos(c, evt) {
 }
 
 c.addEventListener('click', function(evt){
-  var mousePos = getMousePos(c, evt);
+  var mousePos = getMousePosInCanvas(c, evt);
   towers.push(new Tower(mousePos.x, mousePos.y));
 });
 
 // function createTowerWithMouseCoordinates(evt) {
-//   var mousePos = getMousePos(c, evt);
+//   var mousePos = getMousePosInCanvas(c, evt);
 //   towers.push(new Tower(mousePos.x, mousePos.y));
 // }
 
 //create enemy array
-var enemies = [];
-//for loop that pushes desired number of enemies into enemy array
-for(var i = 0; i < NUM_ENEMIES; i++){
-  enemies.push(new Enemy(ENEMY_START_X, ENEMY_START_Y, ENEMY_START_DIRECTION, ENEMY_SPEED, ENEMY_START_RADIUS));
-}
+
 var towers = [];
 towers[0] = new Tower(175,175);
 
@@ -59,13 +61,14 @@ towers[0] = new Tower(175,175);
 **  getCoordinates(): Gets the x and y variables of 
 **the object and returns them in an array.
 */
-function Enemy(xIn, yIn, directionIn, speedIn, radiusIn){
+function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
   this.x = xIn;
   this.y = yIn;
   this.direction = directionIn;
   this.speed = speedIn;
   this.radius = radiusIn;
-  // this.ctx = ctxIn;
+  this.health = healthIn;
+  this.alive = true;
   this.move = function() {
     if(this.direction === RIGHT){
       this.x += this.speed;
@@ -89,8 +92,18 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn){
     return {
       x: this.x,
       y: this.y
-    }
-  }
+    };
+  };
+  this.die = function(){
+    this.x = -1000;
+    this.y = -1000;
+    this.speed = 0;
+    this.alive = false;
+  };
+  this.decreaseHealth = function(damageTaken){
+    this.health -= damageTaken;
+    if(this.health <= 0) this.die();
+  };
 }
 
 
@@ -106,21 +119,47 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn){
 function Tower(xIn, yIn) {
   this.x = xIn;
   this.y = yIn;
+  this.firing = false;
   this.draw = function() {
     ctx.fillRect(this.x - TOWER_SIDE_LENGTH / 2, this.y - TOWER_SIDE_LENGTH / 2, 
     TOWER_SIDE_LENGTH, TOWER_SIDE_LENGTH);
-  }
+    if(this.firing){
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.target.x, this.target.y);
+      ctx.stroke();
+    }
+  };
   this.getCoordinates = function(){
     return {
       x: this.x,
       y: this.y
+    };
+  };
+  this.fire = function(){
+    this.target.decreaseHealth(TOWER_DAMAGE);
+    if(!this.target.alive) {
+      this.firing = false;
     }
-  }
-  this.tryToFire = function(enemyCoordinates){
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(enemyCoordinates.x, enemyCoordinates.y);
-    ctx.stroke();
-  }
+    else {
+      this.firing = true;
+    }
+  };
+  this.checkIfShootable = function(){
+    var xDifferenceSquared = Math.pow((this.x - this.target.x), 2);
+    var yDifferenceSquared = Math.pow((this.y - this.target.y), 2);
+    var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
+    var distance = Math.sqrt(sumOfXDiffAndYDiff);
+    if(distance <= TOWER_RANGE && this.target.alive){
+      this.fire();
+    }
+    else{
+      this.firing = false;
+    }
+  };
+  this.sendNewTargetToCheck = function(newTarget){
+    this.target = newTarget;
+    this.checkIfShootable();
+  };
 }
 
 //step method
@@ -158,21 +197,23 @@ function step(timestamp) {
 */
 function runGame(){
   //run for loop for entire enemy array that runs the following functions for every enemy
+  runEnemySpawner();
+  towersCheckEnemies();
   drawEverything();
   moveEverything();
-  towersCheckEnemies();
 }
 
 
-/*Uses a series of for loops to draw everything. 
+/*Clears the canvas and then uses a series of 
+**for loops to draw everything. 
 */
 function drawEverything(){
   ctx.clearRect(0, 0, c.width, c.height);
-  for(var e = 0; e < enemies.length; e++){
-    enemies[e].draw();
+  for(var i = 0; i < enemies.length; i++){
+    enemies[i].draw();
   }
-  for(e = 0; e < towers.length; e++){
-    towers[e].draw();
+  for(i = 0; i < towers.length; i++){
+    towers[i].draw();
   }
 }
 
@@ -190,21 +231,25 @@ function moveEverything(){
 */
 function towersCheckEnemies(){
   for(var j = 0; j < towers.length; j++){
-    var towerCoordinates = towers[j].getCoordinates();
-    for(var i = 0; i < enemies.length; i++){
-      var enemyCoordinates = enemies[i].getCoordinates();
-      var xDifferenceSquared = Math.pow((towerCoordinates.x - enemyCoordinates.x), 2);
-      var yDifferenceSquared = Math.pow((towerCoordinates.y - enemyCoordinates.y), 2);
-      var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
-      var distance = Math.sqrt(sumOfXDiffAndYDiff);
-      if(distance <= TOWER_RANGE){
-        towers[j].tryToFire(enemyCoordinates)
-      }
+    if(towers[j].firing) towers[j].checkIfShootable();
+    for(var i = enemies.length - 1; i >= 0 && !towers[j].firing; i--){
+      towers[j].sendNewTargetToCheck(enemies[i]);
     }
   }
 }
 
+function runEnemySpawner(){
+  if(enemySpawnCounter % 10 === 0){
+    enemies.unshift(new Enemy(ENEMY_START_X, ENEMY_START_Y, 
+      ENEMY_START_DIRECTION, ENEMY_SPEED, ENEMY_START_RADIUS, ENEMY_START_HEALTH));
+  }
+  if(enemies.length > MAX_ENEMIES){
+    enemies[enemies.length - 1].die();
+    // enemies.splice(enemies.length - 1,1);
+    enemies.pop();
+  }
+  enemySpawnCounter++;
+}
+
 //run window.requestAnimationFrame(step);
 window.requestAnimationFrame(step);
-
-
