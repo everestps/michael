@@ -7,12 +7,12 @@ var LEFT = 1;
 var UP = 2;
 var DOWN = 3;
 var INVERSE_SPAWN_RATE = 100;
-var NUM_HORIZONTAL_NODES = 20;
-var NUM_VERTICAL_NODES = 10;
+var NUM_HORIZONTAL_NODES = 10;
+var NUM_VERTICAL_NODES = 5;
 var NODE_WIDTH = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
 var NODE_HEIGHT = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
-var ENEMY_START_X = 110;
-var ENEMY_START_Y = 120;
+var ENEMY_START_X = -10;
+var ENEMY_START_Y = 225;
 var ENEMY_START_HEALTH = 1000;
 var ENEMY_SPEED = 3;
 var ENEMY_START_DIRECTION = RIGHT;
@@ -27,6 +27,7 @@ else{
   var TOWER_SIDE_LENGTH = (NODE_WIDTH) - 10;
   var ENEMY_START_RADIUS = (NODE_WIDTH) / 2- 10;
 }
+var DIRECTOR_RADIUS = ENEMY_START_RADIUS;
 var TOWER_RANGE = 200;
 var TOWER_DAMAGE = 1;
 var TOWER_COLOR = '#660033';
@@ -41,6 +42,7 @@ var enemies = [];
 var enemySpawnCounter = -1;
 var phantomTower = new PhantomTower(PHANTOM_TOWER_START_X, PHANTOM_TOWER_START_Y);
 c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
+var DRAW_DIRECTORS = false;
 var directors = [];
 
 var nodeCoordinates = determineArrayNodeCoordinates();
@@ -92,6 +94,7 @@ function movePhantomTower(evt){
   phantomTower.y = mousePos.y;
   phantomTower.x = quantizeXToGrid(phantomTower.x);
   phantomTower.y = quantizeYToGrid(phantomTower.y);
+  displayBox.innerHTML = phantomTower.x + ", " + phantomTower.y;
 }
 
 function quantizeXToGrid(xIn){
@@ -185,11 +188,11 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
     if(this.health <= 0) this.die();
   };
   this.directIfInRange = function(directorIn){
-    displayBox.innerHTML = "serious";
-    var distance = distanceBetweenPoints(this.x, this.y, this.directorIn.x, this.directorIn.y);
-    displayBox.innerHTML = "works";
-    if(distance < (this.speed * 2)){
-      this.direction = this.directorIn.direction;
+    var distance = distanceBetweenPoints(this.x, this.y, directorIn.x, directorIn.y);
+    if(distance < (this.speed) && this.direction !== directorIn.direction){
+      this.direction = directorIn.direction;
+      this.x = quantizeXToGrid(this.x);
+      this.y = quantizeYToGrid(this.y);
     }
   };
 }
@@ -265,6 +268,12 @@ function Director(xIn, yIn, directionIn){
   this.x = quantizeXToGrid(xIn);
   this.y = quantizeYToGrid(yIn);
   this.direction = directionIn;
+  this.draw = function(){
+    changeCanvasColor(ENEMY_OUTLINE_COLOR)
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, DIRECTOR_RADIUS, 0, 2*Math.PI);
+    ctx.stroke();
+  }
 }
 
 function PhantomTower(xIn, yIn){
@@ -298,14 +307,19 @@ function step(timestamp) {
   counter ++;
   if (running) {
     window.requestAnimationFrame(step);
-    if(progress >= 70000){
+    if(progress >= 140000){
       running = false;
     }
   }
 }
 
 function createDirectors(){
-  directors.push(new Director(ENEMY_START_X + 200, ENEMY_START_Y, DOWN));
+  directors.push(new Director(ENEMY_START_X + 200, ENEMY_START_Y, UP));
+  directors.push(new Director(175, 75, RIGHT));
+  directors.push(new Director(425, 75, DOWN));
+  directors.push(new Director(425, 375, RIGHT));
+  directors.push(new Director(775, 375, UP));
+  directors.push(new Director(775, 125, RIGHT));
 }
 
 //window.requestAnimationFrame(step);
@@ -328,6 +342,11 @@ function runGame(){
 */
 function drawEverything(){
   ctx.clearRect(0, 0, c.width, c.height);
+  if(DRAW_DIRECTORS){
+    for(var j = 0; j < directors.length; j++){
+      directors[j].draw();
+    }
+  }
   phantomTower.draw();
   for(var i = 0; i < enemies.length; i++){
     enemies[i].draw();
