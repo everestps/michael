@@ -1,26 +1,64 @@
 var CANVAS_BORDER_WIDTH = 30;
+var CANVAS_WIDTH = document.getElementById("myCanvas").width;
+var CANVAS_HEIGHT = document.getElementById("myCanvas").height;
+var INVERSE_GAME_SPEED = 4;
 var RIGHT = 0;
 var LEFT = 1;
 var UP = 2;
 var DOWN = 3;
-var ENEMY_START_X = 100;
-var ENEMY_START_Y = 100;
+var INVERSE_SPAWN_RATE = 100;
+var NUM_HORIZONTAL_NODES = 20;
+var NUM_VERTICAL_NODES = 10;
+var ENEMY_START_X = 110;
+var ENEMY_START_Y = 120;
 var ENEMY_START_RADIUS = 10;
-var ENEMY_START_HEALTH = 25;
+var ENEMY_START_HEALTH = 1000;
 var ENEMY_SPEED = 3;
 var ENEMY_START_DIRECTION = RIGHT;
+var ENEMY_COLOR = "#FFFF00";
+var ENEMY_OUTLINE_COLOR = "#000000";
 var MAX_ENEMIES = 10;
-var TOWER_SIDE_LENGTH = 50;
+if(CANVAS_WIDTH / NUM_HORIZONTAL_NODES > CANVAS_HEIGHT / NUM_VERTICAL_NODES){
+  var TOWER_SIDE_LENGTH = (CANVAS_HEIGHT / NUM_VERTICAL_NODES) - 10;
+}
+else{
+  var TOWER_SIDE_LENGTH = (CANVAS_WIDTH / NUM_HORIZONTAL_NODES) - 10;
+}
 var TOWER_RANGE = 200;
 var TOWER_DAMAGE = 1;
+var TOWER_COLOR = '#660033';
+var LAZER_COLOR = '#FF0000';
+var PHANTOM_TOWER_START_X = -1000;
+var PHANTOM_TOWER_START_Y = -1000;
+var PHANTOM_COLOR = '#838181';
 var c = document.getElementById("myCanvas"); 
 var ctx = c.getContext("2d");
 var displayBox = document.getElementById("displayBox");
-var dBox = displayBox.innerHTML;
 var enemies = [];
 var enemySpawnCounter = -1;
-displayBox.innerHTML = enemySpawnCounter;
+var phantomTower = new PhantomTower(PHANTOM_TOWER_START_X, PHANTOM_TOWER_START_Y);
 c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
+
+var nodeCoordinates = determineArrayNodeCoordinates();
+
+function determineArrayNodeCoordinates(){
+  var nodeWidth = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
+  var nodeHeight = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
+  var nodeWidthStart = nodeWidth / 2;
+  var nodeHeightStart = nodeHeight / 2;
+  var nodeXCoordinates = [];
+  var nodeYCoordinates = [];
+  for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
+    nodeXCoordinates.push(nodeWidthStart + (nodeWidth * i));
+  }
+  for(i = 0; i < NUM_VERTICAL_NODES; i++){
+    nodeYCoordinates.push(nodeHeightStart + (nodeHeight * i));
+  }
+  var nodeCoordinates = {
+    xCoordinates: nodeXCoordinates, 
+    yCoordinates: nodeYCoordinates};
+  return nodeCoordinates;
+}
 
 /*This function returns the mouse x and y coordinates in
 **the form of an array. These coordinates are the 
@@ -35,20 +73,56 @@ function getMousePosInCanvas(c, evt) {
   };
 }
 
-c.addEventListener('click', function(evt){
-  var mousePos = getMousePosInCanvas(c, evt);
-  towers.push(new Tower(mousePos.x, mousePos.y));
-});
+c.addEventListener('click', function(evt){createTowerWithMousePos(evt)});
+c.addEventListener('mousemove', function(evt){movePhantomTower(evt)});
 
-// function createTowerWithMouseCoordinates(evt) {
-//   var mousePos = getMousePosInCanvas(c, evt);
-//   towers.push(new Tower(mousePos.x, mousePos.y));
-// }
+function createTowerWithMousePos(evt) {
+  displayBox.innerHTML = "here";
+  var mousePos = getMousePosInCanvas(c, evt);
+  mousePos.x = quantizeXToGrid(mousePos.x);
+  mousePos.y = quantizeYToGrid(mousePos.y);
+  towers.push(new Tower(mousePos.x, mousePos.y));
+}
+
+function movePhantomTower(evt){
+  var mousePos = getMousePosInCanvas(c, evt);
+  phantomTower.x = mousePos.x;
+  phantomTower.y = mousePos.y;
+  displayBox.innerHTML = phantomTower.x + ", " + phantomTower.y;
+}
+
+function quantizeXToGrid(xIn){
+  var indexOfClosestX;
+  var leastDifference = null;
+  var differenceOfCoordinates
+  for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
+    differenceOfCoordinates = Math.abs(xIn - nodeCoordinates.xCoordinates[i]);
+    if(leastDifference === null || differenceOfCoordinates < leastDifference){
+      leastDifference = differenceOfCoordinates;
+      indexOfClosestX = i;
+    }
+  }
+  return nodeCoordinates.xCoordinates[indexOfClosestX];
+}
+
+function quantizeYToGrid(yIn){
+  var indexOfClosestY;
+  var leastDifference = null;
+  var differenceOfCoordinates
+  for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
+    differenceOfCoordinates = Math.abs(yIn - nodeCoordinates.yCoordinates[i]);
+    if(leastDifference === null || differenceOfCoordinates < leastDifference){
+      leastDifference = differenceOfCoordinates;
+      indexOfClosestY = i;
+    }
+  }
+  return nodeCoordinates.yCoordinates[indexOfClosestY];
+}
 
 //create enemy array
 
 var towers = [];
-towers[0] = new Tower(175,175);
+// towers[0] = new Tower(175,175);
 
 /*This function constructs the enemy object. 
 **
@@ -84,8 +158,11 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
     }
   };
   this.draw = function() {
+    changeCanvasColor(ENEMY_COLOR);
     ctx.beginPath();
     ctx.arc(this.x,this.y,this.radius,0,2*Math.PI);
+    ctx.fill();
+    changeCanvasColor(ENEMY_OUTLINE_COLOR);
     ctx.stroke();
   };
   this.getCoordinates = function(){
@@ -121,9 +198,11 @@ function Tower(xIn, yIn) {
   this.y = yIn;
   this.firing = false;
   this.draw = function() {
+    changeCanvasColor(TOWER_COLOR);
     ctx.fillRect(this.x - TOWER_SIDE_LENGTH / 2, this.y - TOWER_SIDE_LENGTH / 2, 
     TOWER_SIDE_LENGTH, TOWER_SIDE_LENGTH);
     if(this.firing && this.target.alive){
+      changeCanvasColor(LAZER_COLOR);
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.target.x, this.target.y);
       ctx.stroke();
@@ -162,6 +241,16 @@ function Tower(xIn, yIn) {
   };
 }
 
+function PhantomTower(xIn, yIn){
+  this.x = xIn;
+  this.y = yIn;
+  this.draw = function() {
+    changeCanvasColor(PHANTOM_COLOR);
+    ctx.fillRect(this.x - TOWER_SIDE_LENGTH / 2, this.y - TOWER_SIDE_LENGTH / 2, 
+    TOWER_SIDE_LENGTH, TOWER_SIDE_LENGTH);
+  }
+}
+
 //step method
 var start = null;
 var running = true;
@@ -177,7 +266,7 @@ function step(timestamp) {
   //progress equals the time minus the start
   var progress = timestamp - start;
   // runGame function fires
-  if(counter % 5 === 0){
+  if(counter % INVERSE_GAME_SPEED === 0){
     runGame();
   }
   counter ++;
@@ -209,12 +298,18 @@ function runGame(){
 */
 function drawEverything(){
   ctx.clearRect(0, 0, c.width, c.height);
+  phantomTower.draw();
   for(var i = 0; i < enemies.length; i++){
     enemies[i].draw();
   }
   for(i = 0; i < towers.length; i++){
     towers[i].draw();
   }
+}
+
+function changeCanvasColor(colorIn){
+  ctx.strokeStyle = colorIn;
+  ctx.fillStyle = colorIn;
 }
 
 /*Uses a for loop to move everything that
@@ -239,7 +334,7 @@ function towersCheckEnemies(){
 }
 
 function runEnemySpawner(){
-  if(enemySpawnCounter % 10 === 0){
+  if(enemySpawnCounter % INVERSE_SPAWN_RATE === 0){
     enemies.unshift(new Enemy(ENEMY_START_X, ENEMY_START_Y, 
       ENEMY_START_DIRECTION, ENEMY_SPEED, ENEMY_START_RADIUS, ENEMY_START_HEALTH));
   }
