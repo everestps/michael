@@ -7,18 +7,18 @@ var BASIC_MAP = 0;
 var TWO_LOOPS_MAP = 1;
 var THE_LINE_MAP = 2;
 var ZIG_ZAG_MAP = 3;
-var MAP = BASIC_MAP;
+var MAP = BASIC_MAP; //changes which path is created for the enemies to take
 var RIGHT = 0;
 var LEFT = 1;
 var UP = 2;
 var DOWN = 3;
-var INVERSE_SPAWN_RATE = 100;
-var NUM_HORIZONTAL_NODES = 20;
-var NUM_VERTICAL_NODES = 10;
+var SPAWN_RATE = 100; //as this goes down spawning goes up
+var NUM_HORIZONTAL_NODES = 20; //number of nodes in the grid horizontally
+var NUM_VERTICAL_NODES = 10; //number of nodes in the grid vertically
 var NODE_WIDTH = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
 var NODE_HEIGHT = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
-var DRAW_NODES = true;
-var SQUARE_NODES = true;
+var DRAW_NODES = true; //boolean that decides whether or not the nodes are drawn
+var SQUARE_NODES = true; //boolean that decides if the nodes are drawn square. otherwise drawn as circles
 var ENEMY_START_X = nodeToX(0);
 var ENEMY_START_Y = nodeToY(9);
 var ENEMY_START_HEALTH = 1000;
@@ -27,7 +27,7 @@ var ENEMY_START_DIRECTION = RIGHT;
 var ENEMY_COLOR = "#FFFF00";
 var ENEMY_OUTLINE_COLOR = "#000000";
 var MAX_ENEMIES = 10;
-if(NODE_WIDTH > NODE_HEIGHT){
+if(NODE_WIDTH > NODE_HEIGHT){ //decides which variable to base the size of the enemies and towers
   var TOWER_SIDE_LENGTH = (NODE_HEIGHT) - 10;
   var ENEMY_START_RADIUS = (NODE_HEIGHT) / 2 - 10;
 }
@@ -46,7 +46,7 @@ var PHANTOM_TOWER_START_Y = -1000;
 var PHANTOM_COLOR = '#838181';
 var c = document.getElementById("myCanvas"); 
 var ctx = c.getContext("2d");
-var displayBox = document.getElementById("displayBox");
+var displayBox = document.getElementById("displayBox"); //display box for debugging or node coordinates
 var enemies = [];
 var enemySpawnCounter = -1;
 var phantomTower = new PhantomTower(PHANTOM_TOWER_START_X, PHANTOM_TOWER_START_Y);
@@ -111,13 +111,27 @@ function runGame(){
 /*This function constructs the enemy object. 
 **
 **  move(): Function for moving the Object. The speed 
-**variable is used as an increment for how much the 
-**object moves in a direction. 
+**  variable is used as an increment for how much the 
+**  object moves in a direction. 
 **
-**  draw(): Draws the enemy as a black circle.
+**  draw(): Draws the enemy as a colored circle with an outline.
 **
 **  getCoordinates(): Gets the x and y variables of 
-**the object and returns them in an array.
+**  the object and returns them in an array.
+**
+**  die(): sets the coordinates of this object way outside
+**  of the canvas and sets this objects speed to 0. Also,
+**  sets this objects alive boolean to false.
+**
+**  decreaseHealth(): takes in an amount of damage as an argument
+**  and decreases this objects health by that much. If this
+**  object's health becomes zero or less then die() is called.
+**
+**  directIfInRange(): This object checks the distance between 
+**  its coordinates and the incoming directionIn argument. If
+**  it is and this object is not already going the same direction 
+**  then this object changes its direction to match the director 
+**  and quantizes its coordinates to the grid.
 */
 function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
   this.x = xIn;
@@ -177,12 +191,25 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
 
 /*This is the tower object constructor. 
 **
-**  draw(): Draws the tower as a black square. 
+**  draw(): Draws the tower as a black square. Additionally
+**  if this targets tower is still alive and this tower is 
+**  firing then a line is drawn between the tower and its 
+**  target.
 **
 **  getCoordinates(): Gets the x and y variables of 
-**the object and returns them in an array.
+**  the object and returns them in an array. No longer
+**  used but kept just in case.
 **
-**  tryToFire(): Tries to fire the tower lazer.
+**  fire(): Damages its targeted enemy and if it kills 
+**  it then it sets this object's firing boolean to false
+** 
+**  checkIfShootable(): Checks to see if this object's
+**  targeted enemy is shootable. If the enemy is in 
+**  range and not dead then fire() is called. Otherwise 
+**  this object sets its boolean firing to false.
+**
+**  sendNewTargetToCheck(): Recieves an enemy to target 
+**  as an argument and then runs checkIfShootable.
 */
 function Tower(xIn, yIn) {
   this.x = xIn;
@@ -216,9 +243,6 @@ function Tower(xIn, yIn) {
     }
   };
   this.checkIfShootable = function(){
-    // var xDifferenceSquared = Math.pow((this.x - this.target.x), 2);
-    // var yDifferenceSquared = Math.pow((this.y - this.target.y), 2);
-    // var sumOfXDiffAndYDiff = xDifferenceSquared + yDifferenceSquared;
     var distance = distanceBetweenPoints(this.x, this.y, this.target.x, this.target.y);
     if(distance <= TOWER_RANGE && this.target.alive){
       this.fire();
@@ -233,6 +257,11 @@ function Tower(xIn, yIn) {
   };
 }
 
+/*This function is the PhantomTower constructor.
+**
+**  draw(): draws the phantomTower as a colored
+**  square.
+*/
 function PhantomTower(xIn, yIn){
   this.x = xIn;
   this.y = yIn;
@@ -243,6 +272,11 @@ function PhantomTower(xIn, yIn){
   };
 }
 
+/*This is the Director constructor. 
+**
+**  draw(): draws the Director as the outline 
+**  of a colored circle.
+*/
 function Director(xIn, yIn, directionIn){
   this.x = quantizeXToGrid(xIn);
   this.y = quantizeYToGrid(yIn);
@@ -255,6 +289,11 @@ function Director(xIn, yIn, directionIn){
   };
 }
 
+/*This is the PathTile constructor. 
+**
+**  draw(): draws the PathTile as a colored rectangle
+**  that is the size of one cell of the grid.
+*/
 function PathTile(xIn, yIn){
   this.x = xIn;
   this.y = yIn;
@@ -269,8 +308,12 @@ function PathTile(xIn, yIn){
 /*Below are all of the functions associated with runGame()
 */
 
+/*runEnemySpawner(): spawns enemies at a predetermined rate. 
+**  If there are more enemies than the max amount allowed
+**  then the first most created enemies is deleted.
+*/
 function runEnemySpawner(){
-  if(enemySpawnCounter % INVERSE_SPAWN_RATE === 0){
+  if(enemySpawnCounter % SPAWN_RATE === 0){
     enemies.unshift(new Enemy(ENEMY_START_X, ENEMY_START_Y, 
       ENEMY_START_DIRECTION, ENEMY_SPEED, ENEMY_START_RADIUS, ENEMY_START_HEALTH));
   }
@@ -282,6 +325,11 @@ function runEnemySpawner(){
   enemySpawnCounter++;
 }
 
+/*towersCheckEnemies(): checks to see if each tower is firing. 
+**  if it is then the tower runs its checkIfShootable function. 
+**  If the tower is not firing then the towers send the towers 
+**  a new target to check by running sendNewTargetToCheck(enemy).
+*/
 function towersCheckEnemies(){
   for(var i = 0; i < towers.length; i++){
     if(towers[i].firing) towers[i].checkIfShootable();
@@ -291,6 +339,10 @@ function towersCheckEnemies(){
   }
 }
 
+/*enemiesCheckDirectors(): every enemy checks every director to 
+**  to see if it is in range by running its directIfInRange()
+**  function.
+*/
 function enemiesCheckDirectors(){
   for(var i = 0; i < enemies.length; i++){
     for(var j = 0; j < directors.length; j++){
@@ -299,8 +351,8 @@ function enemiesCheckDirectors(){
   }
 }
 
-/*Clears the canvas and then uses a series of 
-**for loops to draw everything. 
+/*drawEverything(): runs a series of functions to 
+**  draw everything that needs to be drawn.
 */
 function drawEverything(){
   clearCanvas();
@@ -316,14 +368,15 @@ function drawEverything(){
 /*Below are functions associated with drawEverything().
 */
 
-/*Uses a for loop to move everything that
-**needs to be moved.
+/*moveEverything(): Uses a for loop to move everything that
+**  needs to be moved. Only the enemies for now.
 */
 function moveEverything(){
   for(var d = 0; d < enemies.length; d++){
     enemies[d].move();
   }
 }
+
 
 function clearCanvas(){
   ctx.clearRect(0, 0, c.width, c.height);
