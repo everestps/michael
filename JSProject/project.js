@@ -369,14 +369,14 @@ function drawEverything(){
 }
 
 function drawNodes(){
-  for(var i = 1; i <= NUM_HORIZONTAL_NODES; i++){
-   for(var j = 1; j <= NUM_VERTICAL_NODES; i++){
-    changeCanvasColor(ENEMY_COLOR);
-    ctx.beginPath();
-    ctx.arc(nodeToX(i), nodeToY(j), NODE_RADIUS, 0,2*Math.PI);
-    ctx.fill();
-   } 
-  }
+  // for(var i = 1; i <= NUM_HORIZONTAL_NODES; i++){
+  // for(var j = 1; j <= NUM_VERTICAL_NODES; i++){
+  //   changeCanvasColor(ENEMY_COLOR);
+  //   ctx.beginPath();
+  //   ctx.arc(nodeToX(i), nodeToY(j), NODE_RADIUS, 0,2*Math.PI);
+  //   ctx.fill();
+  // } 
+  // }
 }
 
 function clearCanvas(){
