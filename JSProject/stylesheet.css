@@ -12,6 +12,6 @@ canvas{
   float: right;
 }
 
-body{
-  /*padding-left: 100px;*/
+#homeButton{
+  float: left;
 }

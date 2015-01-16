@@ -7,7 +7,7 @@ var BASIC_MAP = 0;
 var TWO_LOOPS_MAP = 1;
 var THE_LINE_MAP = 2;
 var ZIG_ZAG_MAP = 3;
-var MAP = ZIG_ZAG_MAP;
+var MAP = BASIC_MAP;
 var RIGHT = 0;
 var LEFT = 1;
 var UP = 2;
@@ -248,11 +248,11 @@ function Director(xIn, yIn, directionIn){
   this.y = quantizeYToGrid(yIn);
   this.direction = directionIn;
   this.draw = function(){
-    changeCanvasColor(ENEMY_OUTLINE_COLOR)
+    changeCanvasColor(ENEMY_OUTLINE_COLOR);
     ctx.beginPath();
     ctx.arc(this.x, this.y, DIRECTOR_RADIUS, 0, 2*Math.PI);
     ctx.stroke();
-  }
+  };
 }
 
 function PathTile(xIn, yIn){
@@ -386,8 +386,8 @@ function createDirectors(){
     directors.push(new Director(nodeToX(4), nodeToY(2), RIGHT));
     directors.push(new Director(nodeToX(9), nodeToY(2), DOWN));
     directors.push(new Director(nodeToX(9), nodeToY(7), RIGHT));
-    directors.push(new Director(nodeToX(20), nodeToY(7), UP));
-    directors.push(new Director(nodeToX(20), nodeToY(2), RIGHT));
+    directors.push(new Director(nodeToX(19), nodeToY(7), UP));
+    directors.push(new Director(nodeToX(19), nodeToY(2), RIGHT));
   }
   else if(MAP === TWO_LOOPS_MAP){
     directors.push(new Director(ENEMY_START_X + nodeToX(1), ENEMY_START_Y, UP));
@@ -494,7 +494,7 @@ function movePhantomTower(evt){
   phantomTower.y = mousePos.y;
   phantomTower.x = quantizeXToGrid(phantomTower.x);
   phantomTower.y = quantizeYToGrid(phantomTower.y);
-  displayBox.innerHTML = phantomTower.x + ", " + phantomTower.y;
+  displayBox.innerHTML = normalXToNode(phantomTower.x) + ", " + normalYToNode(phantomTower.y);
 }
 
 function nodeToX(nodeIn){
@@ -511,10 +511,20 @@ function nodeToY(nodeIn){
   return yCoordinate;
 }
 
+function normalXToNode(xIn){
+  var node = (xIn + (NODE_WIDTH / 2)) / NODE_WIDTH;
+  return node;
+}
+
+function normalYToNode(yIn){
+  var node = (yIn + (NODE_HEIGHT / 2)) / NODE_HEIGHT;
+  return node;
+}
+
 function quantizeXToGrid(xIn){
   var indexOfClosestX;
   var leastDifference = null;
-  var differenceOfCoordinates
+  var differenceOfCoordinates;
   for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
     differenceOfCoordinates = Math.abs(xIn - nodeCoordinates.xCoordinates[i]);
     if(leastDifference === null || differenceOfCoordinates < leastDifference){
@@ -528,7 +538,7 @@ function quantizeXToGrid(xIn){
 function quantizeYToGrid(yIn){
   var indexOfClosestY;
   var leastDifference = null;
-  var differenceOfCoordinates
+  var differenceOfCoordinates;
   for(var i = 0; i < NUM_HORIZONTAL_NODES; i++){
     differenceOfCoordinates = Math.abs(yIn - nodeCoordinates.yCoordinates[i]);
     if(leastDifference === null || differenceOfCoordinates < leastDifference){
