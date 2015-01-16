@@ -11,6 +11,7 @@ var NUM_HORIZONTAL_NODES = 20;
 var NUM_VERTICAL_NODES = 10;
 var NODE_WIDTH = CANVAS_WIDTH / NUM_HORIZONTAL_NODES;
 var NODE_HEIGHT = CANVAS_HEIGHT / NUM_VERTICAL_NODES;
+var DRAW_NODES = true;
 var ENEMY_START_X = -10;
 var ENEMY_START_Y = 225;
 var ENEMY_START_HEALTH = 1000;
@@ -28,6 +29,7 @@ else{
   var ENEMY_START_RADIUS = (NODE_WIDTH) / 2- 10;
 }
 var DIRECTOR_RADIUS = ENEMY_START_RADIUS;
+var NODE_RADIUS = ENEMY_START_RADIUS / 3;
 var TOWER_RANGE = 200;
 var TOWER_DAMAGE = 1;
 var TOWER_COLOR = '#660033';
@@ -42,7 +44,7 @@ var enemies = [];
 var enemySpawnCounter = -1;
 var phantomTower = new PhantomTower(PHANTOM_TOWER_START_X, PHANTOM_TOWER_START_Y);
 c.style.borderWidth = CANVAS_BORDER_WIDTH + "px";
-var DRAW_DIRECTORS = false;
+var DRAW_DIRECTORS = true;
 var directors = [];
 
 var nodeCoordinates = determineArrayNodeCoordinates();
@@ -197,7 +199,6 @@ function Enemy(xIn, yIn, directionIn, speedIn, radiusIn, healthIn){
   };
 }
 
-
 /*This is the tower object constructor. 
 **
 **  draw(): Draws the tower as a black square. 
@@ -286,6 +287,10 @@ function PhantomTower(xIn, yIn){
   }
 }
 
+function PathBlocker(){
+  
+}
+
 //step method
 var start = null;
 var running = true;
@@ -315,11 +320,25 @@ function step(timestamp) {
 
 function createDirectors(){
   directors.push(new Director(ENEMY_START_X + 200, ENEMY_START_Y, UP));
-  directors.push(new Director(175, 75, RIGHT));
-  directors.push(new Director(425, 75, DOWN));
-  directors.push(new Director(425, 375, RIGHT));
-  directors.push(new Director(775, 375, UP));
-  directors.push(new Director(775, 125, RIGHT));
+  directors.push(new Director(nodeToX(4), nodeToY(2), RIGHT));
+  directors.push(new Director(nodeToX(9), nodeToY(2), DOWN));
+  directors.push(new Director(nodeToX(9), nodeToY(7), RIGHT));
+  directors.push(new Director(nodeToX(49), nodeToY(7), UP));
+  directors.push(new Director(nodeToX(943), nodeToY(-39), RIGHT));
+}
+
+function nodeToX(nodeIn){
+  if(nodeIn > NUM_HORIZONTAL_NODES) nodeIn = NUM_HORIZONTAL_NODES;
+  else if(nodeIn <= 0) nodeIn = 1;
+  var xCoordinate = nodeIn * NODE_WIDTH - (NODE_WIDTH/2);
+  return xCoordinate;
+}
+
+function nodeToY(nodeIn){
+  if(nodeIn > NUM_VERTICAL_NODES) nodeIn = NUM_VERTICAL_NODES;
+  else if(nodeIn <= 0) nodeIn = 1;
+  var yCoordinate = nodeIn * NODE_HEIGHT - (NODE_HEIGHT / 2);
+  return yCoordinate;
 }
 
 //window.requestAnimationFrame(step);
@@ -341,16 +360,42 @@ function runGame(){
 **for loops to draw everything. 
 */
 function drawEverything(){
+  clearCanvas();
+  if(DRAW_NODES) drawNodes();
+  if(DRAW_DIRECTORS) drawDirectors();
+  phantomTower.draw();
+  drawEnemies();
+  drawTowers();
+}
+
+function drawNodes(){
+  for(var i = 1; i <= NUM_HORIZONTAL_NODES; i++){
+   for(var j = 1; j <= NUM_VERTICAL_NODES; i++){
+    changeCanvasColor(ENEMY_COLOR);
+    ctx.beginPath();
+    ctx.arc(nodeToX(i), nodeToY(j), NODE_RADIUS, 0,2*Math.PI);
+    ctx.fill();
+   } 
+  }
+}
+
+function clearCanvas(){
   ctx.clearRect(0, 0, c.width, c.height);
-  if(DRAW_DIRECTORS){
-    for(var j = 0; j < directors.length; j++){
+}
+
+function drawDirectors(){
+  for(var j = 0; j < directors.length; j++){
       directors[j].draw();
     }
-  }
-  phantomTower.draw();
+}
+
+function drawEnemies(){
   for(var i = 0; i < enemies.length; i++){
     enemies[i].draw();
   }
+}
+
+function drawTowers(){
   for(i = 0; i < towers.length; i++){
     towers[i].draw();
   }
