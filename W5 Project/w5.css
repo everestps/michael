@@ -14,3 +14,9 @@ root {
 canvas {
     border: 10px solid black;
 }
+
+#displayBox {
+  width: 800px;
+  height: 60px;
+  border: 10px solid black;
+}

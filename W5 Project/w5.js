@@ -12,6 +12,7 @@ var CANVAS_WIDTH = document.getElementById("myCanvas").width;
 var CANVAS_HEIGHT = document.getElementById("myCanvas").height;
 var c = document.getElementById("myCanvas"); 
 var ctx = c.getContext("2d");
+var displayBox = document.getElementById("displayBox");
 var BLOCK_SIZE = 50;
 var HALF_BLOCK_SIZE = BLOCK_SIZE / 2;
 var NORMAL_BLOCK_ID = 0;
@@ -20,10 +21,10 @@ var BLANK_MAP = 8;
 var MAP = getMap(FIRST_MAP);
 var SCENE_ANCHOR_START_X = 0;
 var SCENE_ANCHOR_START_Y = 0;
-var HERO_START_X = gridToCoordinate(5) + HALF_BLOCK_SIZE;
-var HERO_START_Y = gridToCoordinate(3) + HALF_BLOCK_SIZE;
+var HERO_START_X = gridToCoordinate(15) + HALF_BLOCK_SIZE;
+var HERO_START_Y = gridToCoordinate(8) + HALF_BLOCK_SIZE;
 
-var INVERSE_GAME_SPEED = 4;
+var INVERSE_GAME_SPEED = 75;
 var RUN_TIME = -1;
 
 var sceneAnchor = {
@@ -44,17 +45,20 @@ var TOP_LEFT_CORNER = 0;
 var TOP_RIGHT_CORNER = 1;
 var BOTTOM_LEFT_CORNER = 2;
 var BOTTOM_RIGHT_CORNER = 3;
+var NO_ADJUSTMENT = 0;
 
 var KEY_RIGHT = 39;
 var KEY_LEFT = 37;
 var KEY_UP = 38;
 var KEY_DOWN = 40;
 var KEY_SPACE = 32;
+var KEY_Q = 81;
 var rightPressed = false;
 var leftPressed = false;
 var upPressed = false;
 var downPressed = false;
 var spacePressed = false;
+var qPressed = false;
 
 var hero = new Hero(HERO_START_X, HERO_START_Y, HERO_START_X, HERO_START_Y);
 
@@ -64,7 +68,6 @@ var counter = 0;
 
 document.addEventListener('keydown', function(evt){
   var keyCode = evt.keyCode;
-  // alert(keyCode);
   switch(keyCode){
     case KEY_RIGHT:
       rightPressed = true;
@@ -81,12 +84,14 @@ document.addEventListener('keydown', function(evt){
     case KEY_SPACE:
       spacePressed = true;
     break;
+    case KEY_Q:
+      qPressed = true;
+    break;
   }
 });
 
 document.addEventListener('keyup', function(evt){
   var keyCode = evt.keyCode;
-  // alert(keyCode);
   switch(keyCode){
     case KEY_RIGHT:
       rightPressed = false;
@@ -102,6 +107,9 @@ document.addEventListener('keyup', function(evt){
     break;
     case KEY_SPACE:
       spacePressed = false;
+    break;
+    case KEY_Q:
+      qPressed = false;
     break;
   }
 });
@@ -139,7 +147,7 @@ function Hero(xIn, yIn, oldXIn, oldYIn){
         this.oldX = this.x;
         this.oldY = this.y;
         this.x += this.dx;
-        this.y += this.dy;
+        if(!qPressed) this.y += this.dy;
     };
     this.draw = function(){
         ctx.beginPath();
@@ -179,7 +187,7 @@ function step(timestamp) {
 /*Starts a series of functions that change the state of the game.
 */
 function runGame(){
-    accelChange();
+    velocityChange();
     moveHero();
     fixHeroCollisions();
     updateSceneAnchor();
@@ -188,7 +196,7 @@ function runGame(){
     resetCtx();
 }
 
-function accelChange(){
+function velocityChange(){
   if(rightPressed) hero.changeDx(HERO_ACCEL_INCREMENT);
   if(leftPressed) hero.changeDx(-HERO_ACCEL_INCREMENT);
   if(spacePressed && hero.dy === 0) hero.changeDy(-HERO_JUMP_INCREMENT);
@@ -209,66 +217,118 @@ function moveHero(){
       hero.y = c.height - (BLOCK_SIZE / 2);
       hero.dy = 0;
     }
-    
-    // if(hero.x >= c.width - (BLOCK_SIZE / 2)){
-    //   hero.x = c.width - (BLOCK_SIZE / 2);
-    //   hero.dx = 0;
-    // }
-    // if(hero.x <= 0 + (BLOCK_SIZE / 2)){
-    //   hero.x = 0 + (BLOCK_SIZE / 2);
-    //   hero.dx = 0;
-    // }
+    hero.updateCornerCoordinates();
 }
 
 function fixHeroCollisions(){
-  hero.updateCornerCoordinates();
   updateHeroCornerStatus();
+  clearCanvas();
+  hero.draw();
+  // displayBox.innerHTML = ("(" + coordinateToGrid(hero.topLeftCornerX) + "," + coordinateToGrid(hero.topLeftCornerY) + ")("
+  //           + coordinateToGrid(hero.topRightCornerX) + ", " + coordinateToGrid(hero.topRightCornerY) + ")("
+  //           + coordinateToGrid(hero.bottomLeftCornerX) + ", " + coordinateToGrid(hero.bottomLeftCornerY) + ")("
+  //           + coordinateToGrid(hero.bottomRightCornerX) + ", " + coordinateToGrid(hero.bottomRightCornerY) + ")("
+  //           + hero.dx + "," + hero.dy + ")(" + hero.x + "," + hero.y + ")("
+  //           + hero.oldX + "," + hero.oldY + ")");
+            
+  displayBox.innerHTML = ("(" + hero.topLeftCornerX + "," + hero.topLeftCornerY + ")("
+            + hero.topRightCornerX + ", " + hero.topRightCornerY + ")("
+            + hero.bottomLeftCornerX + ", " + hero.bottomLeftCornerY + ")("
+            + hero.bottomRightCornerX + ", " + hero.bottomRightCornerY + ")("
+            + hero.dx + "," + hero.dy + ")(" + hero.x + "," + hero.y + ")("
+            + hero.oldX + "," + hero.oldY + ")");
   
-  if(heroCornerStatus[TOP_LEFT_CORNER] === COLLISION_ID){
-    moveBecauseOfCollision(hero.topLeftCornerX, hero.topLeftCornerY);
-    updateHeroCornerStatus();
-  }
   
-  if(heroCornerStatus[TOP_RIGHT_CORNER] === COLLISION_ID){
-    moveBecauseOfCollision(hero.topRightCornerX, hero.topRightCornerY);
-    updateHeroCornerStatus();
-  }
   
-  if(heroCornerStatus[BOTTOM_LEFT_CORNER] === COLLISION_ID){
-    moveBecauseOfCollision(hero.bottomLeftCornerX, hero.bottomLeftCornerY);
-    updateHeroCornerStatus();
-  }
-  
-  if(heroCornerStatus[BOTTOM_RIGHT_CORNER] === COLLISION_ID){
-    moveBecauseOfCollision(hero.bottomRightCornerX, hero.bottomRightCornerY);
-    updateHeroCornerStatus();
+  while(getNumberOfCollisions() > 0){
+    if (hero.x < quantizeCoordinateMiddlePlusAdjustment(hero.x, NO_ADJUSTMENT)){
+      if(hero.y < quantizeCoordinateMiddlePlusAdjustment(hero.y, NO_ADJUSTMENT)){ //1,4,2,3
+        fixTopRightBottomLeft();
+      }
+      else{
+        fixTopLeftBottomRight();
+      }
+    }
+    else{
+      if(hero.y < quantizeCoordinateMiddlePlusAdjustment(hero.y, NO_ADJUSTMENT)){ 
+        fixTopLeftBottomRight();
+      }
+      else{
+        fixTopRightBottomLeft();
+      }
+    }
   }
 }
 
+function fixTopLeftBottomRight(){
+  if(isCornerColliding(TOP_LEFT_CORNER)){
+    moveBecauseOfCollision(hero.topLeftCornerX, hero.topLeftCornerY);
+    updateHeroCornerStatus();
+  }
+  else if(isCornerColliding(BOTTOM_RIGHT_CORNER)){
+    moveBecauseOfCollision(hero.bottomRightCornerX, hero.bottomRightCornerY);
+    updateHeroCornerStatus();   
+  }
+  else if(isCornerColliding(TOP_RIGHT_CORNER)){
+    moveBecauseOfCollision(hero.topRightCornerX, hero.topRightCornerY);
+    updateHeroCornerStatus();      
+  }
+  else{ //isCornerColliding(BOTTOM_LEFT_CORNER)
+    moveBecauseOfCollision(hero.bottomLeftCornerX, hero.bottomLeftCornerY);
+    updateHeroCornerStatus();      
+  }
+}
+
+function fixTopRightBottomLeft(){
+  alert(isCornerColliding(BOTTOM_LEFT_CORNER));
+  if(isCornerColliding(TOP_RIGHT_CORNER)){
+    moveBecauseOfCollision(hero.topRightCornerX, hero.topRightCornerY);
+    updateHeroCornerStatus();   
+  }
+  else if(isCornerColliding(BOTTOM_LEFT_CORNER)){
+    moveBecauseOfCollision(hero.bottomLeftCornerX, hero.bottomLeftCornerY);
+    updateHeroCornerStatus();   
+  }
+  else if(isCornerColliding(TOP_LEFT_CORNER)){
+    moveBecauseOfCollision(hero.topLeftCornerX, hero.topLeftCornerY);
+    updateHeroCornerStatus();  
+  }
+  else{ //isCornerColliding(BOTTOM_RIGHT_CORNER)
+    moveBecauseOfCollision(hero.bottomRightCornerX, hero.bottomRightCornerY);
+    updateHeroCornerStatus(); 
+  }
+}
+
+function isCornerColliding(cornerIn){
+  return heroCornerStatus[cornerIn] === COLLISION_ID;
+}
+
 function moveBecauseOfCollision(cornerXIn, cornerYIn){
-  var gridCenterX = gridToCoordinate(coordinateToGrid(cornerXIn)) + HALF_BLOCK_SIZE;
-  var gridCenterY = gridToCoordinate(coordinateToGrid(cornerYIn)) + HALF_BLOCK_SIZE;
+  var num = hero.dy / hero.dx;
+  var gridCenterX = quantizeCoordinateMiddlePlusAdjustment(cornerXIn, NO_ADJUSTMENT);
+  var gridCenterY = quantizeCoordinateMiddlePlusAdjustment(cornerYIn, NO_ADJUSTMENT);
   var slope = (hero.oldY - (gridCenterY)) / (hero.oldX - (gridCenterX));
-  if(slope <= 1 && slope >= -1){
+  if(slope <= num && slope >= -num){
     if(hero.oldX < gridCenterX){
-      hero.x = gridToCoordinate(coordinateToGrid(cornerXIn) - 1) + HALF_BLOCK_SIZE;
+      hero.x = quantizeCoordinateMiddlePlusAdjustment(cornerXIn, -1);
       hero.dx = 0;
     }
     else{
-      hero.x = gridToCoordinate(coordinateToGrid(cornerXIn) + 1) + HALF_BLOCK_SIZE;
+      hero.x = quantizeCoordinateMiddlePlusAdjustment(cornerXIn, 1);
       hero.dx = 0;
     }
   }
   else {
     if(hero.oldY < gridCenterY){
-      hero.y = gridToCoordinate(coordinateToGrid(cornerYIn) - 1) + HALF_BLOCK_SIZE;
+      hero.y = quantizeCoordinateMiddlePlusAdjustment(cornerYIn, -1);
       hero.dy = 0;
     }
     else{
-      hero.y = gridToCoordinate(coordinateToGrid(cornerYIn) + 1) + HALF_BLOCK_SIZE;
+      hero.y = quantizeCoordinateMiddlePlusAdjustment(cornerYIn, 1);
       hero.dy = 0;
     }
   }
+  hero.updateCornerCoordinates();
 }
 
 function updateHeroCornerStatus(){
@@ -306,20 +366,8 @@ function getNumberOfCollisions(){
   return numberOfCollisions;
 }
 
-function fixACollisions(){
-  if(heroCornerStatus[TOP_LEFT_CORNER] === COLLISION_ID){
-    
-  }
-  else if(heroCornerStatus[TOP_RIGHT_CORNER] === COLLISION_ID){
-    
-  }
-  else if(heroCornerStatus[TOP_RIGHT_CORNER] === COLLISION_ID){
-    
-  }
-  else if(heroCornerStatus[TOP_RIGHT_CORNER] === COLLISION_ID){
-    
-  }
-  updateHeroCollisions();
+function quantizeCoordinateMiddlePlusAdjustment(coordinateIn, adjustmentIn){
+  return gridToCoordinate(coordinateToGrid(coordinateIn) + adjustmentIn) + HALF_BLOCK_SIZE;
 }
 
 function collisionStatusOfPoint(xIn, yIn){
@@ -328,7 +376,7 @@ function collisionStatusOfPoint(xIn, yIn){
 }
 
 function drawEverything(){
-  clearCanvas();
+  // clearCanvas();
   drawBlocks();
   drawHero();
 }
@@ -342,13 +390,12 @@ function resetCtx(){
 }
 
 function updateSceneAnchor(){
-    if(hero.x >= (c.width - HERO_MARGIN + sceneAnchor.x)){
-      sceneAnchor.x = hero.x - (c.width - HERO_MARGIN);
-    }
-    else if(hero.x <= 0 + HERO_MARGIN + sceneAnchor.x){
-      sceneAnchor.x = hero.x - (0 + HERO_MARGIN);
-    }
-    
+  if(hero.x >= (c.width - HERO_MARGIN + sceneAnchor.x)){
+    sceneAnchor.x = hero.x - (c.width - HERO_MARGIN);
+  }
+  else if(hero.x <= 0 + HERO_MARGIN + sceneAnchor.x){
+    sceneAnchor.x = hero.x - (0 + HERO_MARGIN);
+  }
 }
 
 function clearCanvas(){
@@ -392,11 +439,9 @@ function coordinateToGrid(coorIn){
   return gridOut;
 }
 
-
-
-
-
-
+function display(whatIsBeingDisplayed){
+  displayBox.innerHTML = (whatIsBeingDisplayed);
+}
 
 
 
