@@ -367,7 +367,11 @@ function drawBlocks(){
 
 function drawNormalBlock(xIn, yIn, widthIn, heightIn){
   changeDrawingColor("#000000");
-  ctx.fillRect(xIn, yIn, widthIn, heightIn);
+  // ctx.fillRect(xIn, yIn, widthIn, heightIn);
+  ctx.beginPath();
+  ctx.lineWidth="1";
+  ctx.rect(xIn, yIn, widthIn, heightIn);
+  ctx.stroke();
 }
 
 function changeDrawingColor(colorIn){
