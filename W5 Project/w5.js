@@ -189,7 +189,8 @@ function step(timestamp) {
 function runGame(){
     velocityChange();
     moveHero();
-    fixHeroCollisions();
+    // fixHeroCollisions();
+    
     updateSceneAnchor();
     translateCanvas();
     drawEverything();
@@ -280,7 +281,6 @@ function fixTopLeftBottomRight(){
 }
 
 function fixTopRightBottomLeft(){
-  alert(isCornerColliding(BOTTOM_LEFT_CORNER));
   if(isCornerColliding(TOP_RIGHT_CORNER)){
     moveBecauseOfCollision(hero.topRightCornerX, hero.topRightCornerY);
     updateHeroCornerStatus();   
