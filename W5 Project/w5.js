@@ -24,7 +24,7 @@ var SCENE_ANCHOR_START_Y = 0;
 var HERO_START_X = gridToCoordinate(15) + HALF_BLOCK_SIZE;
 var HERO_START_Y = gridToCoordinate(8) + HALF_BLOCK_SIZE;
 
-var INVERSE_GAME_SPEED = 75;
+var INVERSE_GAME_SPEED = 2;
 var RUN_TIME = -1;
 
 var sceneAnchor = {
@@ -33,7 +33,7 @@ var sceneAnchor = {
 };
 
 var HERO_MARGIN = 200;
-var HERO_ACCEL_INCREMENT = 3;
+var HERO_ACCEL_INCREMENT = 2;
 var HERO_JUMP_INCREMENT = 40;
 var GRAVITY_INCREMENT = 3;
 var FRICTION_INCREMENT = 1;
@@ -133,7 +133,25 @@ function Hero(xIn, yIn, oldXIn, oldYIn){
     this.bottomLeftCornerY;
     this.bottomRightCornerX;
     this.bottomRightCornerY;
+    
+    this.topLeftCornerOldX;
+    this.topLeftCornerOldY;
+    this.topRightCornerOldX;
+    this.topRightCornerOldY;
+    this.bottomLeftCornerOldX;
+    this.bottomLeftCornerOldY;
+    this.bottomRightCornerOldX;
+    this.bottomRightCornerOldY;
     this.updateCornerCoordinates = function(){
+      this.topLeftCornerOldX = this.topLeftCornerX;
+      this.topLeftCornerOldY = this.topLeftCornerY;
+      this.topRightCornerOldX = this.topRightCornerX;
+      this.topRightCornerOldY = this.topRightCornerY;
+      this.bottomLeftCornerOldX = this.bottomLeftCornerX;
+      this.bottomLeftCornerOldY = this.bottomLeftCornerY;
+      this.bottomRightCornerOldX = this.bottomRightCornerX;
+      this.bottomRightCornerOldY = this.bottomRightCornerY;
+      
       this.topLeftCornerX = this.x - HALF_BLOCK_SIZE;
       this.topLeftCornerY = this.y - HALF_BLOCK_SIZE;
       this.topRightCornerX = this.x + HALF_BLOCK_SIZE - 1;
@@ -190,11 +208,101 @@ function runGame(){
     velocityChange();
     moveHero();
     // fixHeroCollisions();
-    
+    // collisionDetection(); only commented because it doesn't currently work will be added later
     updateSceneAnchor();
     translateCanvas();
     drawEverything();
     resetCtx();
+}
+
+function collisionDetection(){
+  var tempX = hero.topLeftCornerX;
+  var tempY = hero.topLeftCornerY;
+  var tempOldX = hero.topLeftCornerOldX;
+  var tempOldY = hero.topLeftCornerOldY;
+  var slope = (tempY - tempOldY) / (tempX - tempOldX);
+  var xCoordinatesBetween = getCoordinatesBetween(coordinateToGrid(tempX), coordinateToGrid(tempOldX));
+  var ysForXCoordinates = getYsForXCoordinates(xCoordinatesBetween, slope, tempX, tempY);
+  var yCoordinatesBetween = getCoordinatesBetween(coordinateToGrid(tempY), coordinateToGrid(tempOldY));
+  var xsForYCoordinates = getXsForYCoordinates(yCoordinatesBetween, slope, tempX, tempY);
+  
+  
+  // getYIntercepts(tempX, tempY, tempOldX, tempOldY);
+  // var xIntercepts = getXIntercepts(tempX, tempY, tempOldX, tempOldY);
+  for(var i = 0; i < xCoordinatesBetween.length; i++){
+    // var yInterceptY = 
+    if(hero.dx > 0){
+      if(collisionStatusOfPoint
+      (coordinateToGrid(xCoordinatesBetween[i])), 
+      coordinateToGrid(ysForXCoordinates[i])){
+          
+      }
+    }
+    else if(hero.dx < 0){
+      
+    }
+  }
+  // for(i = o; i < xIntercepts; i++){
+    
+  // }
+}
+
+function getYsForXCoordinates(xCoordinatesIn, slopeIn, xIn, yIn){
+  var ysForXCoordinates = [];
+  for(var i = 0; i < xCoordinatesIn; i++){
+    ysForXCoordinates.push(slopeIn * (xCoordinatesIn[i] - xIn) + yIn);
+  }
+  return ysForXCoordinates;
+}
+
+function getXsForYCoordinates(yCoordinatesIn, slopeIn, xIn, yIn){
+  var xsForYCoordinates = [];
+  for(var i = 0; i < yCoordinatesIn; i++){
+    xsForYCoordinates.push(((yCoordinatesIn - yIn) / slopeIn) + xIn);
+  }
+  return xsForYCoordinates;
+}
+
+
+function getYIntercepts (xIn, yIn, oldXIn, oldYIn){
+  var yIntercepts = [];
+  var slope = (yIn - oldYIn) / (xIn - oldYIn);
+  var coordinatesBetween = getCoordinatesBetween(coordinateToGrid(xIn), coordinateToGrid(oldXIn));
+  for(var i = 0; i < coordinatesBetween.length; i++){
+    yIntercepts.push(slope * (coordinatesBetween[i] - xIn) + yIn);
+  }
+  return yIntercepts;
+}
+
+function getXIntercepts(xIn, yIn, oldXIn, oldYIn){
+  var xIntercepts = [];
+  var slope = (yIn - oldYIn) / (xIn - oldYIn);
+  var coordinatesBetween = getCoordinatesBetween(coordinateToGrid(yIn), coordinateToGrid(oldYIn));
+  for(var i = 0; i < coordinatesBetween.length; i++){
+    xIntercepts.push(slope * (coordinatesBetween[i] - xIn) + yIn);
+  }
+  return xIntercepts;
+}
+
+function getCoordinatesBetween(gridIn, oldGridIn){
+  var coordinatesBetween = [];
+  var difference = gridIn - oldGridIn;
+  if(difference > 0){
+    for(var i = 0; i < difference; i++){
+      coordinatesBetween.push(gridToCoordinate(oldGridIn + i));
+    }
+  }
+  else if (difference < 0){
+    for(var i = 0; i < -difference; i++){
+      coordinatesBetween.push(gridToCoordinate(gridIn + i)); 
+    }
+  }
+  return coordinatesBetween;
+}
+
+function collisionStatusOfPoint(xIn, yIn){
+  if(MAP[yIn][xIn] === NORMAL_BLOCK_ID) return true;
+  else return false;
 }
 
 function velocityChange(){
@@ -370,13 +478,8 @@ function quantizeCoordinateMiddlePlusAdjustment(coordinateIn, adjustmentIn){
   return gridToCoordinate(coordinateToGrid(coordinateIn) + adjustmentIn) + HALF_BLOCK_SIZE;
 }
 
-function collisionStatusOfPoint(xIn, yIn){
-  if(MAP[yIn][xIn] === NORMAL_BLOCK_ID) return true;
-  else return false;
-}
-
 function drawEverything(){
-  // clearCanvas();
+  clearCanvas();
   drawBlocks();
   drawHero();
 }
