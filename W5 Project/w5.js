@@ -21,7 +21,7 @@ var BLANK_MAP = 8;
 var MAP = getMap(FIRST_MAP);
 var SCENE_ANCHOR_START_X = 0;
 var SCENE_ANCHOR_START_Y = 0;
-var HERO_START_X = gridToCoordinate(15) + HALF_BLOCK_SIZE;
+var HERO_START_X = gridToCoordinate(2) + HALF_BLOCK_SIZE;
 var HERO_START_Y = gridToCoordinate(8) + HALF_BLOCK_SIZE;
 
 var INVERSE_GAME_SPEED = 2;
@@ -208,7 +208,7 @@ function runGame(){
     velocityChange();
     moveHero();
     // fixHeroCollisions();
-    // collisionDetection(); only commented because it doesn't currently work will be added later
+    collisionDetection();
     updateSceneAnchor();
     translateCanvas();
     drawEverything();
@@ -220,36 +220,38 @@ function collisionDetection(){
   var tempY = hero.topLeftCornerY;
   var tempOldX = hero.topLeftCornerOldX;
   var tempOldY = hero.topLeftCornerOldY;
-  var slope = (tempY - tempOldY) / (tempX - tempOldX);
+  // var slope = (tempY - tempOldY) / (tempX - tempOldX);
+  // displayBox.innerHTML = slope;
+  var slope = hero.dy / hero.dx;
+  // displayBox.innerHTML += (", " + slope);
   var xCoordinatesBetween = getCoordinatesBetween(coordinateToGrid(tempX), coordinateToGrid(tempOldX));
   var ysForXCoordinates = getYsForXCoordinates(xCoordinatesBetween, slope, tempX, tempY);
   var yCoordinatesBetween = getCoordinatesBetween(coordinateToGrid(tempY), coordinateToGrid(tempOldY));
   var xsForYCoordinates = getXsForYCoordinates(yCoordinatesBetween, slope, tempX, tempY);
   
+  // displayBox.innerHTML = (xCoordinatesBetween.length + ", " + ysForXCoordinates.length)
+  // displayBox.innerHTML = MAP[15][4];
+  // displayBox.innerHTML = ("tempX:" + tempX + ", tempOldX:" + tempOldX + ", c2G tempX:" + coordinateToGrid(tempX) + ", c2g tempOldX:" + coordinateToGrid(tempOldX) + ", xTween:" + xCoordinatesBetween[0]);
   
-  // getYIntercepts(tempX, tempY, tempOldX, tempOldY);
-  // var xIntercepts = getXIntercepts(tempX, tempY, tempOldX, tempOldY);
   for(var i = 0; i < xCoordinatesBetween.length; i++){
-    // var yInterceptY = 
-    if(hero.dx > 0){
-      if(collisionStatusOfPoint
-      (coordinateToGrid(xCoordinatesBetween[i])), 
-      coordinateToGrid(ysForXCoordinates[i])){
-          
+  // displayBox.innerHTML = (xCoordinatesBetween[i] + ", " + ysForXCoordinates[i] + ", " + tempX + ", " + tempY + ", " + slope);  
+    if(hero.dx < 0){
+      if(collisionStatusOfPoint(coordinateToGrid(xCoordinatesBetween[i]), coordinateToGrid(ysForXCoordinates[i]))){
+        hero.x = quantizeCoordinateMiddlePlusAdjustment(xCoordinatesBetween[i], NO_ADJUSTMENT);
+        hero.dx = 0;
+        displayBox.innerHTML = (quantizeCoordinateMiddlePlusAdjustment(xCoordinatesBetween[i], NO_ADJUSTMENT) + ", " + hero.x);
+        
       }
     }
-    else if(hero.dx < 0){
+    // else if(hero.dx < 0){
       
-    }
+    // }
   }
-  // for(i = o; i < xIntercepts; i++){
-    
-  // }
 }
 
 function getYsForXCoordinates(xCoordinatesIn, slopeIn, xIn, yIn){
   var ysForXCoordinates = [];
-  for(var i = 0; i < xCoordinatesIn; i++){
+  for(var i = 0; i < xCoordinatesIn.length; i++){
     ysForXCoordinates.push(slopeIn * (xCoordinatesIn[i] - xIn) + yIn);
   }
   return ysForXCoordinates;
@@ -257,12 +259,11 @@ function getYsForXCoordinates(xCoordinatesIn, slopeIn, xIn, yIn){
 
 function getXsForYCoordinates(yCoordinatesIn, slopeIn, xIn, yIn){
   var xsForYCoordinates = [];
-  for(var i = 0; i < yCoordinatesIn; i++){
-    xsForYCoordinates.push(((yCoordinatesIn - yIn) / slopeIn) + xIn);
+  for(var i = 0; i < yCoordinatesIn.length; i++){
+    xsForYCoordinates.push(((yCoordinatesIn[i] - yIn) / slopeIn) + xIn);
   }
   return xsForYCoordinates;
 }
-
 
 function getYIntercepts (xIn, yIn, oldXIn, oldYIn){
   var yIntercepts = [];
@@ -289,18 +290,19 @@ function getCoordinatesBetween(gridIn, oldGridIn){
   var difference = gridIn - oldGridIn;
   if(difference > 0){
     for(var i = 0; i < difference; i++){
-      coordinatesBetween.push(gridToCoordinate(oldGridIn + i));
+      coordinatesBetween.push(gridToCoordinate(oldGridIn + i + 1));
     }
   }
   else if (difference < 0){
     for(var i = 0; i < -difference; i++){
-      coordinatesBetween.push(gridToCoordinate(gridIn + i)); 
+      coordinatesBetween.push(gridToCoordinate(gridIn + i + 1)); 
     }
   }
   return coordinatesBetween;
 }
 
 function collisionStatusOfPoint(xIn, yIn){
+  // displayBox.innerHTML = (xIn + ", " + yIn);
   if(MAP[yIn][xIn] === NORMAL_BLOCK_ID) return true;
   else return false;
 }
@@ -472,6 +474,10 @@ function getNumberOfCollisions(){
     numberOfCollisions += heroCornerStatus[i];
   }
   return numberOfCollisions;
+}
+
+function quantizeCoordinatePlusAdjustment(coordinateIn, adjustmentIn){
+  return gridToCoordinate(coordinateToGrid(coordinateIn)) + adjustmentIn;
 }
 
 function quantizeCoordinateMiddlePlusAdjustment(coordinateIn, adjustmentIn){
