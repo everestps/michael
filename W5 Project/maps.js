@@ -9,6 +9,7 @@
 
 
 var FIRST_MAP = 0;
+var TEST_MAP = 1;
 var BLANK_MAP = 8;
 var x = 0;
 var y = 1;
@@ -27,9 +28,17 @@ function getMap(mapNumberIn){
                 [x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
                 [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x]];
     }
-    else if(mapNumberIn === BLANK_MAP){
-      return[[y,y],
-            [y,y]];
+    else if(mapNumberIn === TEST_MAP){
+      return [[x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+              [x,x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
+              [x,y,x,y,y,y,y,y,y,y,y,y,y,y,y,x,y,y,y,x,y,x,x,x,y,x,x,x,y,x],
+              [x,y,y,x,y,y,y,y,y,y,y,y,y,y,y,x,x,y,x,x,y,x,y,x,y,x,y,x,y,x],
+              [x,y,y,y,x,y,y,y,y,x,x,x,y,y,y,x,y,x,y,x,y,x,x,x,y,x,x,x,y,x],
+              [x,y,y,y,y,x,y,y,y,y,y,y,y,y,y,x,y,y,y,x,y,x,y,x,y,x,y,y,y,x],
+              [x,y,y,y,y,y,x,y,y,y,y,y,y,y,y,x,y,y,y,x,y,x,y,x,y,x,y,y,y,x],
+              [x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
+              [x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
+              [x,y,y,y,y,y,y,y,y,y,y,y,y,y,x,y,y,y,y,x,x,x,x,x,x,x,x,x,x,x]];
     }
     else{
         return false;
