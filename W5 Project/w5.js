@@ -12,6 +12,9 @@ var CANVAS_WIDTH = document.getElementById("myCanvas").width;
 var CANVAS_HEIGHT = document.getElementById("myCanvas").height;
 var c = document.getElementById("myCanvas"); 
 var ctx = c.getContext("2d");
+
+// document.body.appendChild(offScreen.canvas);
+
 var displayBox = document.getElementById("displayBox");
 var BLOCK_SIZE = 50;
 var HALF_BLOCK_SIZE = BLOCK_SIZE / 2;
@@ -24,8 +27,18 @@ var BLANK_MAP = 8;
 var MAP = getMap(TEST_MAP);
 var SCENE_ANCHOR_START_X = 0;
 var SCENE_ANCHOR_START_Y = 0;
-var HERO_START_X = gridToCoordinate(2) + HALF_BLOCK_SIZE;
-var HERO_START_Y = gridToCoordinate(9) + HALF_BLOCK_SIZE;
+var HERO_START_X = gridToCoordinate(3) + HALF_BLOCK_SIZE;
+var HERO_START_Y = gridToCoordinate(7) + HALF_BLOCK_SIZE;
+
+var offScreen = {};
+offScreen.canvas = document.createElement('canvas');
+offScreen.canvas.width = MAP[0].length * BLOCK_SIZE;
+offScreen.canvas.height = MAP.length * BLOCK_SIZE;
+offScreen.ctx = offScreen.canvas.getContext("2d");
+
+var NORMAL_BLOCK = {x: 580, y:800, width: 68, height: 70};
+
+var TILESET = document.getElementById("platformTiles");
 
 var INVERSE_GAME_SPEED = 2;
 var RUN_TIME = -1;
@@ -73,6 +86,8 @@ var running = true;
 var counter = 0;
 var debugCounter = 0;
 
+drawBlocks();
+
 document.addEventListener('keydown', function(evt){
   var keyCode = evt.keyCode;
   switch(keyCode){
@@ -116,14 +131,12 @@ document.addEventListener('keyup', function(evt){
       spacePressed = false;
     break;
     case KEY_Q:
-      // qPressed = false;
+      qPressed = false;
     break;
   }
 });
 
 window.requestAnimationFrame(step);
-
-
 
 function Hero(xIn, yIn, oldXIn, oldYIn){
     this.x = xIn;
@@ -150,7 +163,7 @@ function Hero(xIn, yIn, oldXIn, oldYIn){
     this.bottomRightCornerOldX;
     this.bottomRightCornerOldY;
     
-    this.updateCornerCoordinates = function(){
+    this.updateOldCornerCoordinates = function(){
       this.topLeftCornerOldX = this.topLeftCornerX;
       this.topLeftCornerOldY = this.topLeftCornerY;
       this.topRightCornerOldX = this.topRightCornerX;
@@ -159,6 +172,9 @@ function Hero(xIn, yIn, oldXIn, oldYIn){
       this.bottomLeftCornerOldY = this.bottomLeftCornerY;
       this.bottomRightCornerOldX = this.bottomRightCornerX;
       this.bottomRightCornerOldY = this.bottomRightCornerY;
+    }
+    this.updateCornerCoordinates = function(){
+      
       
       this.topLeftCornerX = this.x - HALF_HERO_SIZE;
       this.topLeftCornerY = this.y - HALF_HERO_SIZE;
@@ -237,36 +253,26 @@ function collisionDetection(){
     var bottomLeft = getClosestCollision(hero.bottomLeftCornerX, hero.bottomLeftCornerY, hero.bottomLeftCornerOldX, hero.bottomLeftCornerOldY, hero.dx, hero.dy, "bl");
     var bottomRight = getClosestCollision(hero.bottomRightCornerX, hero.bottomRightCornerY, hero.bottomRightCornerOldX, hero.bottomRightCornerOldY, hero.dx, hero.dy, "br");
     
-    displayBox.innerHTML = hero.topLeftCornerX + ", " + hero.topLeftCornerY;
-    
-    
-    var xOfClosestCollision = topLeft.x;
-    var yOfClosestCollision = topLeft.y;
-    var lineTypeOfCollision = topLeft.lineType;
+    var closestDistance = null;
     var topLeftDistance = getDistance(topLeft.x, topLeft.y, hero.topLeftCornerOldX, hero.topLeftCornerOldY);
-    var closestDistance = topLeftDistance;
-    
     var topRightDistance = getDistance(topRight.x, topRight.y, hero.topRightCornerOldX, hero.topRightCornerOldY);
-    if(topRightDistance < closestDistance){
-      xOfClosestCollision = topRight.x;
-      yOfClosestCollision = topRight.y;
-      lineTypeOfCollision = topRight.lineType;
+    var bottomLeftDistance = getDistance(bottomLeft.x, bottomLeft.y, hero.bottomLeftCornerOldX, hero.bottomLeftCornerOldY);
+    var bottomRightDistance = getDistance(bottomRight.x, bottomRight.y, hero.bottomRightCornerOldX, hero.bottomRightCornerOldY);
+
+
+    if(topLeftDistance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+      closestDistance = topLeftDistance;
+    }
+    
+    if(topRightDistance < closestDistance || closestDistance === null || isNaN(closestDistance)){
       closestDistance = topRightDistance;
     }
     
-    var bottomLeftDistance = getDistance(bottomLeft.x, bottomLeft.y, hero.bottomLeftCornerOldX, hero.bottomLeftCornerOldY);
-    if(bottomLeftDistance < closestDistance){
-      xOfClosestCollision = bottomLeft.x;
-      yOfClosestCollision = bottomLeft.y;
-      lineTypeOfCollision = bottomLeft.lineType;
+    if(bottomLeftDistance < closestDistance || closestDistance === null || isNaN(closestDistance)){
       closestDistance = bottomLeftDistance;
     }
     
-    var bottomRightDistance = getDistance(bottomRight.x, bottomRight.y, hero.bottomRightCornerOldX, hero.bottomRightCornerOldY);
-    if(bottomRightDistance < closestDistance){
-      xOfClosestCollision = bottomRight.x;
-      yOfClosestCollision = bottomRight.y;
-      lineTypeOfCollision = bottomRight.lineType;
+    if(bottomRightDistance < closestDistance || closestDistance === null || isNaN(closestDistance)){
       closestDistance = bottomRightDistance;
     }
     
@@ -274,17 +280,265 @@ function collisionDetection(){
     if(hero.dx > 0) var directionX = -1;
     else if(hero.dx < 0) var directionX = 1;
     
-    // displayBox.innerHTML = directionX
-    
+
+
     if(topLeftDistance <= closestDistance){
       if(topLeft.lineType === VERTICAL){
-        hero.x = topLeft.x + (HALF_HERO_SIZE * directionX);
+        hero.x = topLeft.x + HALF_HERO_SIZE;
         hero.dx = 0;
-        hero.updateCornerCoordinates;
+        
+      }
+      else{
+        hero.y = topLeft.y + HALF_HERO_SIZE;
+        hero.dy = 0;
+      }
+    }
+
+    if(topRightDistance <= closestDistance){
+      if(topRight.lineType === VERTICAL){
+        hero.x = topRight.x - HALF_HERO_SIZE - 1;
+        hero.dy = 0;
+      }
+      else{
+        hero.y = topRight.y + HALF_HERO_SIZE;
+        hero.dy = 0;
+      }
+    }
+    
+    if(bottomLeftDistance <= closestDistance){
+      if(bottomLeft.lineType === VERTICAL){
+        hero.x = bottomLeft.x + HALF_HERO_SIZE;
+        hero.dx = 0;
+        
+      }
+      else{
+        hero.y = bottomLeft.y - HALF_HERO_SIZE - 1;
+        hero.dy = 0;
+      }
+    }
+    
+    if(bottomRightDistance <= closestDistance){
+      if(bottomRight.lineType === VERTICAL){
+        hero.x = bottomRight.x - HALF_HERO_SIZE - 1;
+        hero.dx = 0;
+        
+      }
+      else{
+        hero.y = bottomRight.y - HALF_HERO_SIZE - 1;
+        hero.dy = 0;
       }
     }
     
   }
+  else if(hero.dx !== 0 && hero.dy === 0){
+    if(hero.dx > 0){
+      displayBox.innerHTML = "";
+      var topRightCoordinatesBetween = getCoordinatesBetween(hero.topRightCornerX, hero.topRightCornerOldX);
+      var bottomRightCoordinatesBetween = getCoordinatesBetween(hero.bottomRightCornerX, hero.bottomRightCornerOldX);
+      var ysForXCoordinatesTop = [];
+      var ysForXCoordinatesBottom = [];
+      for(var i = 0; i < topRightCoordinatesBetween.length; i++){
+        ysForXCoordinatesTop.push(hero.y - HALF_HERO_SIZE);
+      }
+      for(i = 0; i < bottomRightCoordinatesBetween.length; i++){
+        ysForXCoordinatesBottom.push(hero.y + HALF_HERO_SIZE);
+      }
+      var xCoordinatesOfCollisionsTop = [];
+      var yCoordinatesOfCollisionsTop = [];
+      var xCoordinatesOfCollisionsBottom = [];
+      var yCoordinatesOfCollisionsBottom = [];
+      
+      for(i = 0; i < topRightCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(topRightCoordinatesBetween[i], ysForXCoordinatesTop[i])){
+          xCoordinatesOfCollisionsTop.push(topRightCoordinatesBetween[i]);
+          yCoordinatesOfCollisionsTop.push(ysForXCoordinatesTop[i]);
+        }
+      }
+      
+      for(i = 0; i < bottomRightCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(bottomRightCoordinatesBetween[i], ysForXCoordinatesBottom[i])){
+          xCoordinatesOfCollisionsBottom.push(bottomRightCoordinatesBetween[i]);
+          yCoordinatesOfCollisionsBottom.push(ysForXCoordinatesBottom[i]);
+        }
+      }
+      
+      var closestDistance = null;
+      for(i = 0; i < xCoordinatesOfCollisionsTop.length; i++){
+        var distance = getDistance(hero.topRightCornerOldX, hero.topRightCornerOldY, xCoordinatesOfCollisionsTop[i], ysForXCoordinatesTop[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.x = xCoordinatesOfCollisionsTop[i] - HALF_HERO_SIZE - 1;
+          hero.dx = 0;
+        }
+      }
+      for(i = 0; i < xCoordinatesOfCollisionsBottom.length; i++){
+        var distance = getDistance(hero.bottomRightCornerOldX, hero.bottomRightCornerOldY, xCoordinatesOfCollisionsBottom[i], ysForXCoordinatesBottom[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.x = xCoordinatesOfCollisionsBottom[i] - HALF_HERO_SIZE - 1;
+          hero.dx = 0;
+        }
+      }
+      
+      
+    }
+    else {//dx < 0
+      var topLeftCoordinatesBetween = getCoordinatesBetween(hero.topLeftCornerX, hero.topLeftCornerOldX);
+      var bottomLeftCoordinatesBetween = getCoordinatesBetween(hero.bottomLeftCornerX, hero.bottomLeftCornerOldX);
+      var ysForXCoordinatesTop = [];
+      var ysForXCoordinatesBottom = [];
+      for(var i = 0; i < topLeftCoordinatesBetween.length; i++){
+        ysForXCoordinatesTop.push(hero.y - HALF_HERO_SIZE);
+      }
+      for(i = 0; i < bottomLeftCoordinatesBetween.length; i++){
+        ysForXCoordinatesBottom.push(hero.y + HALF_HERO_SIZE);
+      }
+      var xCoordinatesOfCollisionsTop = [];
+      var yCoordinatesOfCollisionsTop = [];
+      var xCoordinatesOfCollisionsBottom = [];
+      var yCoordinatesOfCollisionsBottom = [];
+      
+      for(i = 0; i < topLeftCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(topLeftCoordinatesBetween[i] - BLOCK_SIZE, ysForXCoordinatesTop[i])){
+          xCoordinatesOfCollisionsTop.push(topLeftCoordinatesBetween[i]);
+          yCoordinatesOfCollisionsTop.push(ysForXCoordinatesTop[i]);
+        }
+      }
+      
+      
+      
+      for(i = 0; i < bottomLeftCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(bottomLeftCoordinatesBetween[i] - BLOCK_SIZE, ysForXCoordinatesBottom[i])){
+          xCoordinatesOfCollisionsBottom.push(bottomLeftCoordinatesBetween[i]);
+          yCoordinatesOfCollisionsBottom.push(ysForXCoordinatesBottom[i]);
+        }
+      }
+      
+      // displayBox.innerHTML = xCoordinatesOfCollisionsTop[i] + ", " + ysForXCoordinatesTop[i] + ", " + xCoordinatesOfCollisionsBottom[i] + ", " + yCoordinatesOfCollisionsBottom[i];
+      displayBox.innerHTML = topLeftCoordinatesBetween[0] + ", " + ysForXCoordinatesTop[0];
+      
+      var closestDistance = null;
+      for(i = 0; i < xCoordinatesOfCollisionsTop.length; i++){
+        var distance = getDistance(hero.topLeftCornerOldX, hero.topLeftCornerOldY, xCoordinatesOfCollisionsTop[i], ysForXCoordinatesTop[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.x = xCoordinatesOfCollisionsTop[i] + HALF_HERO_SIZE;
+          hero.dx = 0;
+        }
+      }
+      for(i = 0; i < xCoordinatesOfCollisionsBottom.length; i++){
+        var distance = getDistance(hero.bottomLeftCornerOldX, hero.bottomLeftCornerOldY, xCoordinatesOfCollisionsBottom[i], ysForXCoordinatesBottom[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.x = xCoordinatesOfCollisionsBottom[i] + HALF_HERO_SIZE;
+          hero.dx = 0;
+        }
+      }
+    }
+  }
+  else if(hero.dx === 0 && hero.dy!== 0){
+    if(hero.dy > 0){
+      var bottomLeftCoordinatesBetween = getCoordinatesBetween(hero.bottomLeftCornerY, hero.bottomLeftCornerOldY);
+      var bottomRightCoordinatesBetween = getCoordinatesBetween(hero.bottomRightCornerY, hero.bottomRightCornerOldY);
+      var xsForYCoordinatesLeft = [];
+      var xsForYCoordinatesRight = [];
+      // displayBox.innerHTML = hero.bottomLeftCornerY + ", " + hero.bottomLeftCornerOldY + ", " + bottomLeftCoordinatesBetween[0];
+      for(var i = 0; i < bottomLeftCoordinatesBetween.length; i++){
+        xsForYCoordinatesLeft.push(hero.x - HALF_HERO_SIZE);
+      }
+      for(i = 0; i < bottomRightCoordinatesBetween.length; i++){
+        xsForYCoordinatesRight.push(hero.x + HALF_HERO_SIZE);
+      }
+      var xCoordinatesOfCollisionsLeft = [];
+      var yCoordinatesOfCollisionsLeft = [];
+      var xCoordinatesOfCollisionsRight = [];
+      var yCoordinatesOfCollisionsRight = [];
+      
+      for(i = 0; i < bottomLeftCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(xsForYCoordinatesLeft[i], bottomLeftCoordinatesBetween[i])){
+          xCoordinatesOfCollisionsLeft.push(xsForYCoordinatesLeft[i]);
+          yCoordinatesOfCollisionsLeft.push(bottomLeftCoordinatesBetween[i]);
+        }
+      }
+      
+      for(i = 0; i < bottomRightCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(xsForYCoordinatesRight[i], bottomRightCoordinatesBetween[i])){
+          xCoordinatesOfCollisionsRight.push(xsForYCoordinatesRight[i]);
+          yCoordinatesOfCollisionsRight.push(bottomRightCoordinatesBetween[i]);
+        }
+      }
+      
+      var closestDistance = null;
+      for(i = 0; i < xCoordinatesOfCollisionsLeft.length; i++){
+        var distance = getDistance(hero.bottomLeftCornerOldX, hero.bottomLeftCornerOldX, xCoordinatesOfCollisionsLeft[i], yCoordinatesOfCollisionsLeft[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.y = yCoordinatesOfCollisionsLeft[i] - HALF_HERO_SIZE - 1;
+          hero.dy = 0;
+        }
+      }
+      for(i = 0; i < xCoordinatesOfCollisionsRight.length; i++){
+        var distance = getDistance(hero.bottomRightCornerOldX, hero.bottomRightCornerOldY, xCoordinatesOfCollisionsRight[i], yCoordinatesOfCollisionsRight[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.y = yCoordinatesOfCollisionsRight[i] - HALF_HERO_SIZE - 1;
+          hero.dy = 0;
+        }
+      }
+      
+      
+    }
+    else { //hero.dy < 0
+      var topLeftCoordinatesBetween = getCoordinatesBetween(hero.topLeftCornerY, hero.topLeftCornerOldY);
+      var topRightCoordinatesBetween = getCoordinatesBetween(hero.topRightCornerY, hero.topRightCornerOldY);
+      var xsForYCoordinatesLeft = [];
+      var xsForYCoordinatesRight = [];
+      displayBox.innerHTML = hero.topLeftCornerY + ", " + hero.topLeftCornerOldY + ", " + topLeftCoordinatesBetween[0];
+      for(var i = 0; i < topLeftCoordinatesBetween.length; i++){
+        xsForYCoordinatesLeft.push(hero.x - HALF_HERO_SIZE);
+      }
+      for(i = 0; i < topRightCoordinatesBetween.length; i++){
+        xsForYCoordinatesRight.push(hero.x + HALF_HERO_SIZE);
+      }
+      var xCoordinatesOfCollisionsLeft = [];
+      var yCoordinatesOfCollisionsLeft = [];
+      var xCoordinatesOfCollisionsRight = [];
+      var yCoordinatesOfCollisionsRight = [];
+      
+      for(i = 0; i < topLeftCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(xsForYCoordinatesLeft[i], topLeftCoordinatesBetween[i] - BLOCK_SIZE)){
+          xCoordinatesOfCollisionsLeft.push(xsForYCoordinatesLeft[i]);
+          yCoordinatesOfCollisionsLeft.push(topLeftCoordinatesBetween[i]);
+        }
+      }
+      
+      for(i = 0; i < topRightCoordinatesBetween.length; i++){
+        if(collisionStatusOfPoint(xsForYCoordinatesRight[i], topRightCoordinatesBetween[i] - BLOCK_SIZE)){
+          xCoordinatesOfCollisionsRight.push(xsForYCoordinatesRight[i]);
+          yCoordinatesOfCollisionsRight.push(topRightCoordinatesBetween[i]);
+        }
+      }
+      
+      var closestDistance = null;
+      for(i = 0; i < xCoordinatesOfCollisionsLeft.length; i++){
+        var distance = getDistance(hero.topLeftCornerOldX, hero.topLeftCornerOldX, xCoordinatesOfCollisionsLeft[i], yCoordinatesOfCollisionsLeft[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.y = yCoordinatesOfCollisionsLeft[i] + HALF_HERO_SIZE;
+          hero.dy = 0;
+        }
+      }
+      for(i = 0; i < xCoordinatesOfCollisionsRight.length; i++){
+        var distance = getDistance(hero.topRightCornerOldX, hero.topRightCornerOldY, xCoordinatesOfCollisionsRight[i], yCoordinatesOfCollisionsRight[i]);
+        if(distance < closestDistance || closestDistance === null || isNaN(closestDistance)){
+          closestDistance = distance;
+          hero.y = yCoordinatesOfCollisionsRight[i] + HALF_HERO_SIZE;
+          hero.dy = 0;
+        }
+      }
+    }
+  }
+  hero.updateCornerCoordinates();
 }
 
 function getDistance(xIn, yIn, x2In, y2In){
@@ -299,10 +553,6 @@ function getClosestCollision(xIn, yIn, oldXIn, oldYIn, dxIn, dyIn, testingId){
   var ysForXCoordinates = getYsForXCoordinates(xCoordinatesBetween, slope, oldXIn, oldYIn);
   var yCoordinatesBetween = getCoordinatesBetween(yIn, oldYIn);
   var xsForYCoordinates = getXsForYCoordinates(yCoordinatesBetween, slope, oldXIn, oldYIn);
-  if(testingId === "tl"){
-  // displayBox.innerHTML = xIn + ", " + yIn + ", " + oldXIn + ", " + oldYIn + ", " + dxIn + ", " + dyIn + ", " + testingId;
-  // displayBox.innerHTML = displayBox.innerHTML + ", " + xCoordinatesBetween[0] + ", " + ysForXCoordinates[0] + ", " + yCoordinatesBetween[0] + ", " + xsForYCoordinates[0];
-  }
   {
   var xCoordinatesOfCollisions = [];
   var yCoordinatesOfCollisions = [];
@@ -341,7 +591,6 @@ function getClosestCollision(xIn, yIn, oldXIn, oldYIn, dxIn, dyIn, testingId){
   var yOfClosestCollision;
   var lineTypeOfCollision;
   var closestDistance = null;
-  // if(testingId === "tl") displayBox.innerHTML = displayBox.innerHTML + ", lengthstff: " + xCoordinatesOfCollisions.length + ", " + yCoordinatesOfCollisions.length + ", " + xCoordinatesOfCollisions[0] + ", " + yCoordinatesOfCollisions;
   for(var i = 0; i < xCoordinatesOfCollisions.length; i++){
     var distance = getDistance(xCoordinatesOfCollisions[i], yCoordinatesOfCollisions[i], oldXIn, oldYIn);
     if(closestDistance === null || distance < closestDistance){
@@ -351,7 +600,6 @@ function getClosestCollision(xIn, yIn, oldXIn, oldYIn, dxIn, dyIn, testingId){
       closestDistance = distance;
     }
   }
-  // if(testingId === "tl") displayBox.innerHTML = displayBox.innerHTML + "stuff: " + xOfClosestCollision + ", " + yOfClosestCollision + ", " + lineTypeOfCollision;
   if(xOfClosestCollision === null || yOfClosestCollision === null || lineTypeOfCollision === null){
     return null;
   }
@@ -362,7 +610,8 @@ function getClosestCollision(xIn, yIn, oldXIn, oldYIn, dxIn, dyIn, testingId){
 function getYsForXCoordinates(xCoordinatesIn, slopeIn, xIn, yIn){
   var ysForXCoordinates = [];
   for(var i = 0; i < xCoordinatesIn.length; i++){
-    ysForXCoordinates.push(slopeIn * (xCoordinatesIn[i] - xIn) + yIn);
+    if(xCoordinatesIn[i] === xIn) ysForXCoordinates.push(yIn);
+    else ysForXCoordinates.push(slopeIn * (xCoordinatesIn[i] - xIn) + yIn);
   }
   return ysForXCoordinates;
 }
@@ -370,7 +619,8 @@ function getYsForXCoordinates(xCoordinatesIn, slopeIn, xIn, yIn){
 function getXsForYCoordinates(yCoordinatesIn, slopeIn, xIn, yIn){
   var xsForYCoordinates = [];
   for(var i = 0; i < yCoordinatesIn.length; i++){
-    xsForYCoordinates.push(((yCoordinatesIn[i] - yIn) / slopeIn) + xIn);
+    if(yCoordinatesIn[i] === yIn) xsForYCoordinates.push(xIn);
+    else xsForYCoordinates.push(((yCoordinatesIn[i] - yIn) / slopeIn) + xIn);
   }
   return xsForYCoordinates;
 }
@@ -396,7 +646,6 @@ function getCoordinatesBetween(coorIn, oldCoorIn){
 function collisionStatusOfPoint(xIn, yIn, idIn){
   var cellX = coordinateToGrid(xIn);
   var cellY = coordinateToGrid(yIn);
-  // displayBox.innerHTML = displayBox.innerHTML + ", hurr: " + xIn + ", " + yIn;
   if(MAP[cellY][cellX] === NORMAL_BLOCK_ID) return true;
   else return false;
 }
@@ -418,13 +667,13 @@ function moveHero(){
     hero.move();
     
     //TODO Delete below. Code that keeps hero from falling through the floor
-    if(hero.y >= c.height - (HERO_SIZE / 2)){
-      hero.y = c.height - (HERO_SIZE / 2);
+    if(hero.y >= c.height - 1 - HALF_HERO_SIZE){
+      hero.y = c.height - 1 - HALF_HERO_SIZE;
       hero.dy = 0;
     }
+    hero.updateOldCornerCoordinates();
     hero.updateCornerCoordinates();
 }
-
 
 function quantizeCoordinatePlusAdjustment(coordinateIn, adjustmentIn){
   return gridToCoordinate(coordinateToGrid(coordinateIn)) + adjustmentIn;
@@ -436,8 +685,12 @@ function quantizeCoordinateMiddlePlusAdjustment(coordinateIn, adjustmentIn){
 
 function drawEverything(){
   clearCanvas();
-  drawBlocks();
+  drawOffScreenCanvas();
   drawHero();
+}
+
+function drawOffScreenCanvas(){
+  ctx.drawImage(offScreen.canvas, 0, 0, offScreen.canvas.width, offScreen.canvas.height);
 }
 
 function translateCanvas(){
@@ -474,10 +727,11 @@ function drawBlocks(){
 function drawNormalBlock(xIn, yIn, widthIn, heightIn){
   changeDrawingColor("#000000");
   // ctx.fillRect(xIn, yIn, widthIn, heightIn);
-  ctx.beginPath();
-  ctx.lineWidth="1";
-  ctx.rect(xIn, yIn, widthIn, heightIn);
-  ctx.stroke();
+  // offScreen.ctx.beginPath();
+  // offScreen.ctx.lineWidth="1";
+  // offScreen.ctx.rect(xIn, yIn, widthIn, heightIn);
+  // offScreen.ctx.stroke();
+  offScreen.ctx.drawImage(TILESET, NORMAL_BLOCK.x, NORMAL_BLOCK.y, NORMAL_BLOCK.width, NORMAL_BLOCK.height, xIn, yIn, widthIn + 1, heightIn + 1);
 }
 
 function changeDrawingColor(colorIn){

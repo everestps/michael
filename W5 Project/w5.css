@@ -20,3 +20,7 @@ canvas {
   height: 60px;
   border: 10px solid black;
 }
+
+#platformTiles {
+  display: none;
+}

@@ -38,7 +38,7 @@ function getMap(mapNumberIn){
               [x,y,y,y,y,y,x,y,y,y,y,y,y,y,y,x,y,y,y,x,y,x,y,x,y,x,y,y,y,x],
               [x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
               [x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,x],
-              [x,y,y,y,y,y,y,y,y,y,y,y,y,y,x,y,y,y,y,x,x,x,x,x,x,x,x,x,x,x]];
+              [x,x,x,x,x,x,x,x,y,y,y,y,y,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x]];
     }
     else{
         return false;
