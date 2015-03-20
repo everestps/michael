@@ -20,7 +20,6 @@ var BLOCK_SIZE = 50;
 var HALF_BLOCK_SIZE = BLOCK_SIZE / 2;
 var HERO_SIZE = 40;
 var HALF_HERO_SIZE = HERO_SIZE / 2;
-var NORMAL_BLOCK_ID = 0;
 var FIRST_MAP = 0;
 var TEST_MAP = 1;
 var BLANK_MAP = 8;
@@ -36,7 +35,10 @@ offScreen.canvas.width = MAP[0].length * BLOCK_SIZE;
 offScreen.canvas.height = MAP.length * BLOCK_SIZE;
 offScreen.ctx = offScreen.canvas.getContext("2d");
 
-var NORMAL_BLOCK = {x: 580, y:800, width: 68, height: 70};
+var NORMAL_BLOCK = {x: 576, y:865, width: 70, height: 70, id: 1};
+var TOP_BLOCK = {x: 504, y: 577, width: 70, height: 70, id: 2};
+var LEFT_LEDGE = {x: 504 , y: 649, width: 70, height: 70, id: 3};
+var RIGHT_LEDGE = {x: 504, y: 505, width: 70, height: 70, id:4};
 
 var TILESET = document.getElementById("platformTiles");
 
@@ -646,7 +648,10 @@ function getCoordinatesBetween(coorIn, oldCoorIn){
 function collisionStatusOfPoint(xIn, yIn, idIn){
   var cellX = coordinateToGrid(xIn);
   var cellY = coordinateToGrid(yIn);
-  if(MAP[cellY][cellX] === NORMAL_BLOCK_ID) return true;
+  if(MAP[cellY][cellX] === NORMAL_BLOCK.id ||
+     MAP[cellY][cellX] === TOP_EDGE.id ||
+     MAP[cellY][cellX] === LEFT_LEDGE.id ||
+     MAP[cellY][cellX] === RIGHT_LEDGE.id) return true;
   else return false;
 }
 
@@ -717,21 +722,25 @@ function clearCanvas(){
 function drawBlocks(){
   for(var i  = 0; i < MAP.length; i++){
     for(var j = 0; j < MAP[i].length; j++){
-      if(MAP[i][j] === NORMAL_BLOCK_ID){
-        drawNormalBlock(gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+      if(MAP[i][j] === NORMAL_BLOCK.id){
+        drawBlock(NORMAL_BLOCK, gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+      }
+      else if(MAP[i][j] === TOP_BLOCK.id){
+        drawBlock(TOP_BLOCK,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+      }
+      else if(MAP[i][j] === LEFT_LEDGE.id){
+        drawBlock(LEFT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+      }
+      else if(MAP[i][j] === RIGHT_LEDGE.id){
+        drawBlock(RIGHT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
       }
     }
   }
 }
 
-function drawNormalBlock(xIn, yIn, widthIn, heightIn){
+function drawBlock(tileIn, xIn, yIn, widthIn, heightIn){
   changeDrawingColor("#000000");
-  // ctx.fillRect(xIn, yIn, widthIn, heightIn);
-  // offScreen.ctx.beginPath();
-  // offScreen.ctx.lineWidth="1";
-  // offScreen.ctx.rect(xIn, yIn, widthIn, heightIn);
-  // offScreen.ctx.stroke();
-  offScreen.ctx.drawImage(TILESET, NORMAL_BLOCK.x, NORMAL_BLOCK.y, NORMAL_BLOCK.width, NORMAL_BLOCK.height, xIn, yIn, widthIn + 1, heightIn + 1);
+  offScreen.ctx.drawImage(TILESET, tileIn.x, tileIn.y, tileIn.width, tileIn.height, xIn, yIn, widthIn + 1, heightIn + 1);
 }
 
 function changeDrawingColor(colorIn){
