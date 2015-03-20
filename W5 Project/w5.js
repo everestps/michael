@@ -6,16 +6,6 @@
 * To change this template use Tools | Templates.
 */
 
-
-
-var CANVAS_WIDTH = document.getElementById("myCanvas").width;
-var CANVAS_HEIGHT = document.getElementById("myCanvas").height;
-var c = document.getElementById("myCanvas"); 
-var ctx = c.getContext("2d");
-
-// document.body.appendChild(offScreen.canvas);
-
-var displayBox = document.getElementById("displayBox");
 var BLOCK_SIZE = 50;
 var HALF_BLOCK_SIZE = BLOCK_SIZE / 2;
 var HERO_SIZE = 40;
@@ -23,11 +13,18 @@ var HALF_HERO_SIZE = HERO_SIZE / 2;
 var FIRST_MAP = 0;
 var TEST_MAP = 1;
 var BLANK_MAP = 8;
-var MAP = getMap(TEST_MAP);
+var MAP = getMap(FIRST_MAP);
 var SCENE_ANCHOR_START_X = 0;
 var SCENE_ANCHOR_START_Y = 0;
-var HERO_START_X = gridToCoordinate(3) + HALF_BLOCK_SIZE;
+var HERO_START_X = gridToCoordinate(8) + HALF_BLOCK_SIZE;
 var HERO_START_Y = gridToCoordinate(7) + HALF_BLOCK_SIZE;
+
+var CANVAS_WIDTH = document.getElementById("myCanvas").width;
+var CANVAS_HEIGHT = document.getElementById("myCanvas").height;
+var c = document.getElementById("myCanvas"); 
+var ctx = c.getContext("2d");
+
+var displayBox = document.getElementById("displayBox");
 
 var offScreen = {};
 offScreen.canvas = document.createElement('canvas');
@@ -35,12 +32,29 @@ offScreen.canvas.width = MAP[0].length * BLOCK_SIZE;
 offScreen.canvas.height = MAP.length * BLOCK_SIZE;
 offScreen.ctx = offScreen.canvas.getContext("2d");
 
+var midground = {};
+midground.canvas = document.createElement('canvas');
+midground.canvas.width = MAP[0].length * BLOCK_SIZE * 2;
+midground.canvas.height = MAP.length * BLOCK_SIZE;
+midground.ctx = midground.canvas.getContext("2d");
+
+var TILESET;
+var BACKGROUND;
+var TREE_SHEET;
+
 var NORMAL_BLOCK = {x: 576, y:865, width: 70, height: 70, id: 1};
 var TOP_BLOCK = {x: 504, y: 577, width: 70, height: 70, id: 2};
 var LEFT_LEDGE = {x: 504 , y: 649, width: 70, height: 70, id: 3};
-var RIGHT_LEDGE = {x: 504, y: 505, width: 70, height: 70, id:4};
+var RIGHT_LEDGE = {x: 504, y: 505, width: 70, height: 70, id: 4};
 
-var TILESET = document.getElementById("platformTiles");
+var PLANT_START_Y = 300;
+var PLANT_INCREMENT = 500;
+var TREE_LOOPS = 4;
+var TREE_ONE =   {x: 134, y: 15,  width: 49, height: 96,  dx: -30, dy: c.height - 350, dWidth: 300, dHeight: 350};
+var TREE_TWO =   {x: 201, y: 40,  width: 43, height: 72,  dx: 350, dy: c.height - 275, dWidth: 250, dHeight: 275};
+var TREE_THREE = {x: 134, y: 132, width: 51, height: 106, dx: 175, dy: c.height - 350, dWidth: 300, dHeight: 350};
+var BUSH_ONE =   {x: 517, y: 15,  width: 58, height: 42,  dx: 130, dy: c.height - 150, dWidth: 150, dHeight: 150};
+var BUSH_TWO =   {x: 578, y: 8,   width: 59, height: 48,  dx: 510, dy: c.height - 175, dWidth: 150, dHeight: 175};
 
 var INVERSE_GAME_SPEED = 2;
 var RUN_TIME = -1;
@@ -88,7 +102,6 @@ var running = true;
 var counter = 0;
 var debugCounter = 0;
 
-drawBlocks();
 
 document.addEventListener('keydown', function(evt){
   var keyCode = evt.keyCode;
@@ -138,7 +151,14 @@ document.addEventListener('keyup', function(evt){
   }
 });
 
-window.requestAnimationFrame(step);
+window.onload = function(){
+    TILESET = document.getElementById("platformTiles");
+    BACKGROUND = document.getElementById("background");
+    TREE_SHEET = document.getElementById("treeSheet");
+    drawBlocks();
+    drawMidground();
+    window.requestAnimationFrame(step);
+}
 
 function Hero(xIn, yIn, oldXIn, oldYIn){
     this.x = xIn;
@@ -238,8 +258,6 @@ function runGame(){
     if(!qPressed){
     velocityChange();
     moveHero();
-    // fixHeroCollisions();
-    // collisionDetection2();
     collisionDetection();
     updateSceneAnchor();
     translateCanvas();
@@ -334,7 +352,6 @@ function collisionDetection(){
   }
   else if(hero.dx !== 0 && hero.dy === 0){
     if(hero.dx > 0){
-      displayBox.innerHTML = "";
       var topRightCoordinatesBetween = getCoordinatesBetween(hero.topRightCornerX, hero.topRightCornerOldX);
       var bottomRightCoordinatesBetween = getCoordinatesBetween(hero.bottomRightCornerX, hero.bottomRightCornerOldX);
       var ysForXCoordinatesTop = [];
@@ -416,8 +433,6 @@ function collisionDetection(){
         }
       }
       
-      // displayBox.innerHTML = xCoordinatesOfCollisionsTop[i] + ", " + ysForXCoordinatesTop[i] + ", " + xCoordinatesOfCollisionsBottom[i] + ", " + yCoordinatesOfCollisionsBottom[i];
-      displayBox.innerHTML = topLeftCoordinatesBetween[0] + ", " + ysForXCoordinatesTop[0];
       
       var closestDistance = null;
       for(i = 0; i < xCoordinatesOfCollisionsTop.length; i++){
@@ -444,7 +459,6 @@ function collisionDetection(){
       var bottomRightCoordinatesBetween = getCoordinatesBetween(hero.bottomRightCornerY, hero.bottomRightCornerOldY);
       var xsForYCoordinatesLeft = [];
       var xsForYCoordinatesRight = [];
-      // displayBox.innerHTML = hero.bottomLeftCornerY + ", " + hero.bottomLeftCornerOldY + ", " + bottomLeftCoordinatesBetween[0];
       for(var i = 0; i < bottomLeftCoordinatesBetween.length; i++){
         xsForYCoordinatesLeft.push(hero.x - HALF_HERO_SIZE);
       }
@@ -495,7 +509,6 @@ function collisionDetection(){
       var topRightCoordinatesBetween = getCoordinatesBetween(hero.topRightCornerY, hero.topRightCornerOldY);
       var xsForYCoordinatesLeft = [];
       var xsForYCoordinatesRight = [];
-      displayBox.innerHTML = hero.topLeftCornerY + ", " + hero.topLeftCornerOldY + ", " + topLeftCoordinatesBetween[0];
       for(var i = 0; i < topLeftCoordinatesBetween.length; i++){
         xsForYCoordinatesLeft.push(hero.x - HALF_HERO_SIZE);
       }
@@ -649,10 +662,14 @@ function collisionStatusOfPoint(xIn, yIn, idIn){
   var cellX = coordinateToGrid(xIn);
   var cellY = coordinateToGrid(yIn);
   if(MAP[cellY][cellX] === NORMAL_BLOCK.id ||
-     MAP[cellY][cellX] === TOP_EDGE.id ||
+     MAP[cellY][cellX] === TOP_BLOCK.id ||
      MAP[cellY][cellX] === LEFT_LEDGE.id ||
-     MAP[cellY][cellX] === RIGHT_LEDGE.id) return true;
-  else return false;
+     MAP[cellY][cellX] === RIGHT_LEDGE.id){
+       return true;
+  }
+  else{
+      return false;
+  }
 }
 
 function velocityChange(){
@@ -690,12 +707,32 @@ function quantizeCoordinateMiddlePlusAdjustment(coordinateIn, adjustmentIn){
 
 function drawEverything(){
   clearCanvas();
+  drawBackground();
+  drawMidgroundCanvas();
   drawOffScreenCanvas();
   drawHero();
 }
 
 function drawOffScreenCanvas(){
   ctx.drawImage(offScreen.canvas, 0, 0, offScreen.canvas.width, offScreen.canvas.height);
+}
+
+function drawMidgroundCanvas(){
+  ctx.drawImage(midground.canvas, sceneAnchor.x / 2, sceneAnchor.y / 2, midground.canvas.width, midground.canvas.height);
+}
+
+function drawBackground(){
+    ctx.drawImage(BACKGROUND, sceneAnchor.x, sceneAnchor.y, c.width, c.height);
+}
+
+function drawMidground(){
+    for(var i = 0; i < TREE_LOOPS; i++){
+        drawToCanvas(midground.ctx, TREE_SHEET, TREE_ONE, TREE_ONE.dx + PLANT_INCREMENT * i, TREE_ONE.dy, TREE_ONE.dWidth, TREE_ONE.dHeight);
+        drawToCanvas(midground.ctx, TREE_SHEET, BUSH_ONE, BUSH_ONE.dx + PLANT_INCREMENT * i, BUSH_ONE.dy, BUSH_ONE.dWidth, BUSH_ONE.dHeight);
+        drawToCanvas(midground.ctx, TREE_SHEET, TREE_TWO, TREE_TWO.dx + PLANT_INCREMENT * i, TREE_TWO.dy, TREE_TWO.dWidth, TREE_TWO.dHeight);
+        drawToCanvas(midground.ctx, TREE_SHEET, BUSH_TWO, BUSH_TWO.dx + PLANT_INCREMENT * i, BUSH_TWO.dy, BUSH_TWO.dWidth, BUSH_TWO.dHeight);
+        drawToCanvas(midground.ctx, TREE_SHEET, TREE_THREE, TREE_THREE.dx + PLANT_INCREMENT * i, TREE_THREE.dy, TREE_THREE.dWidth, TREE_THREE.dHeight);
+    }
 }
 
 function translateCanvas(){
@@ -723,25 +760,28 @@ function drawBlocks(){
   for(var i  = 0; i < MAP.length; i++){
     for(var j = 0; j < MAP[i].length; j++){
       if(MAP[i][j] === NORMAL_BLOCK.id){
-        drawBlock(NORMAL_BLOCK, gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+        drawToCanvas(offScreen.ctx, TILESET, NORMAL_BLOCK, gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
       }
       else if(MAP[i][j] === TOP_BLOCK.id){
-        drawBlock(TOP_BLOCK,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+        drawToCanvas(offScreen.ctx, TILESET, TOP_BLOCK,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
       }
       else if(MAP[i][j] === LEFT_LEDGE.id){
-        drawBlock(LEFT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+        drawToCanvas(offScreen.ctx, TILESET, LEFT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
       }
       else if(MAP[i][j] === RIGHT_LEDGE.id){
-        drawBlock(RIGHT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
+        drawToCanvas(offScreen.ctx, TILESET, RIGHT_LEDGE,  gridToCoordinate(j), gridToCoordinate(i), BLOCK_SIZE, BLOCK_SIZE);
       }
     }
   }
 }
 
-function drawBlock(tileIn, xIn, yIn, widthIn, heightIn){
-  changeDrawingColor("#000000");
-  offScreen.ctx.drawImage(TILESET, tileIn.x, tileIn.y, tileIn.width, tileIn.height, xIn, yIn, widthIn + 1, heightIn + 1);
+function drawToCanvas(contextIn, imageIn, tileIn, xIn, yIn, widthIn, heightIn){
+  contextIn.drawImage(imageIn, tileIn.x, tileIn.y, tileIn.width, tileIn.height, xIn, yIn, widthIn + 1, heightIn + 1);
 }
+
+// function drawPlant(tileIn, xIn, yIn, widthIn, heightIn){
+    
+// }
 
 function changeDrawingColor(colorIn){
   ctx.fillStyle = colorIn;

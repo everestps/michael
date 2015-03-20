@@ -24,3 +24,11 @@ canvas {
 #platformTiles {
   display: none;
 }
+
+#background{
+    display: none;
+}
+
+#treeSheet{
+    display: none;
+}
