@@ -29,12 +29,12 @@ var BODY_PART_RADIUS = Math.floor(MOVE_INCREMENT / 2);
 var NUM_HORIZONTAL_INCREMENTS = Math.floor(canvas.width / MOVE_INCREMENT);
 var NUM_VERTICAL_INCREMENTS = Math.floor(canvas.height / MOVE_INCREMENT)
 
-var HEAD_START_X = gridToCoordinate(1);
-var HEAD_START_Y = gridToCoordinate(1);
-var HEAD_START_DIRECTION = DOWN;
-var HEAD2_START_X = gridToCoordinate(8);
-var HEAD2_START_Y = gridToCoordinate(8);
-var HEAD2_START_DIRECTION = UP;
+var HEAD_START_X = gridToCoordinate(NUM_HORIZONTAL_INCREMENTS / 2);
+var HEAD_START_Y = gridToCoordinate(NUM_VERTICAL_INCREMENTS / 2);
+var HEAD_START_DIRECTION = RIGHT;
+var HEAD2_START_X = gridToCoordinate(NUM_HORIZONTAL_INCREMENTS / 2 - 1);
+var HEAD2_START_Y = gridToCoordinate(NUM_VERTICAL_INCREMENTS / 2 - 1);
+var HEAD2_START_DIRECTION = LEFT;
 var HEAD_INDEX = 0;
 
 var BODY_PART_SPAWN_X = -100;
@@ -47,30 +47,31 @@ var DEFAULT_FRUIT_COLOR = "#f81437";
 
 var INVERSE_GAME_SPEED = 4;
 
-var bodyParts = [];
-var bodyParts2 = [];
-bodyParts.push(new Head(HEAD_START_X, HEAD_START_Y, HEAD_START_DIRECTION, BODY_PART_RADIUS));
-bodyParts2.push(new Head(HEAD2_START_X, HEAD2_START_Y, HEAD2_START_DIRECTION, BODY_PART_RADIUS));
-addBodyParts(10, bodyParts);
-addBodyParts(10, bodyParts2);
+var bodyParts;
+var bodyParts2;
 var fruit;
+startGame();
 spawnFruit();
 
-db(canvas.width + ", " + canvas.height + ", " + gridToCoordinate(65));
+// db(canvas.width + ", " + canvas.height + ", " + gridToCoordinate(65));
 var counter = 0;
 var gameRunning = true;
 window.requestAnimationFrame(runGame);
 
 document.addEventListener('keydown', function(evt){
     var keyCode = evt.keyCode;
-    if(keyCode === KEY_UP && bodyParts[HEAD_INDEX].direction !== DOWN) bodyParts[HEAD_INDEX].direction = UP;
-    else if(keyCode === KEY_DOWN && bodyParts[HEAD_INDEX].direction !== UP) bodyParts[HEAD_INDEX].direction = DOWN;
-    else if(keyCode === KEY_LEFT && bodyParts[HEAD_INDEX].direction !== RIGHT) bodyParts[HEAD_INDEX].direction = LEFT;
-    else if(keyCode === KEY_RIGHT && bodyParts[HEAD_INDEX].direction !== LEFT) bodyParts[HEAD_INDEX].direction = RIGHT;
+    if(keyCode === KEY_UP && bodyParts[HEAD_INDEX].y <= bodyParts[1].y) bodyParts[HEAD_INDEX].direction = UP;
+    else if(keyCode === KEY_DOWN && bodyParts[HEAD_INDEX].y >= bodyParts[1].y) bodyParts[HEAD_INDEX].direction = DOWN;
+    else if(keyCode === KEY_LEFT && bodyParts[HEAD_INDEX].x <= bodyParts[1].x) bodyParts[HEAD_INDEX].direction = LEFT;
+    else if(keyCode === KEY_RIGHT && bodyParts[HEAD_INDEX].x >= bodyParts[1].x) bodyParts[HEAD_INDEX].direction = RIGHT;
     else if(keyCode === KEY_W && bodyParts2[HEAD_INDEX].direction !== DOWN) bodyParts2[HEAD_INDEX].direction = UP;
     else if(keyCode === KEY_S && bodyParts2[HEAD_INDEX].direction !== UP) bodyParts2[HEAD_INDEX].direction = DOWN;
     else if(keyCode === KEY_A && bodyParts2[HEAD_INDEX].direction !== RIGHT) bodyParts2[HEAD_INDEX].direction = LEFT;
     else if(keyCode === KEY_D && bodyParts2[HEAD_INDEX].direction !== LEFT) bodyParts2[HEAD_INDEX].direction = RIGHT;
+    if(!gameRunning){ 
+        startGame();
+        gameRunning = true;
+    }
 });
 
 function Head(xIn, yIn, directionIn, radiusIn){
@@ -136,13 +137,13 @@ function Fruit(xIn, yIn, colorIn){
 }
 
 function runGame(){
-    if(counter % INVERSE_GAME_SPEED === 0){
+    if(counter % INVERSE_GAME_SPEED === 0 && gameRunning){
         moveEverything();
         drawEverything();
         checkCollisions();
     }
     counter++;
-    if(gameRunning) window.requestAnimationFrame(runGame);
+    window.requestAnimationFrame(runGame);
 }
 
 function moveEverything(){
@@ -172,6 +173,7 @@ function checkCollisionsWithBodyParts(){
         if((bodyParts[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts[HEAD_INDEX].y === bodyParts2[i].y)) gameRunning = false;
         if((bodyParts2[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts2[HEAD_INDEX].y === bodyParts2[i].y)) gameRunning = false; 
     }
+    if (!gameRunning)db("Game Over! Press any key to play again.");
 }
 
 function checkCollisionsWithFruit(){
@@ -231,14 +233,22 @@ function addBodyParts(numParts, bodyPartsIn){
 }
 
 function gridToCoordinate(gridIn){
-    return gridIn * MOVE_INCREMENT + BODY_PART_RADIUS;
+    return Math.floor(gridIn) * MOVE_INCREMENT + BODY_PART_RADIUS;
 }
 
 function changeColor(colorIn){
     ctx.fillStyle = colorIn;
 }
 
-
+function startGame(){
+    bodyParts = [];
+    bodyParts2 = [];
+    bodyParts.push(new Head(HEAD_START_X, HEAD_START_Y, HEAD_START_DIRECTION, BODY_PART_RADIUS));
+    bodyParts2.push(new Head(HEAD2_START_X, HEAD2_START_Y, HEAD2_START_DIRECTION, BODY_PART_RADIUS));
+    addBodyParts(10, bodyParts);
+    addBodyParts(10, bodyParts2);
+    spawnFruit();
+}
 
 
 
