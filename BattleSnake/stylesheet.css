@@ -1,0 +1,22 @@
+/*
+    Document   : stylesheet.css
+    Created on : 2015-04-30 05:12 PM
+    Author     : mvann
+    Description:
+    Purpose of the stylesheet follows.
+    To change this template use Tools | Templates.
+*/
+
+root {
+    display: block;
+}
+
+#myCanvas {
+    border: 5px solid black;
+}
+
+#displayBox {
+    border: 5px solid black;
+    height: 75px;
+    width: 200px;
+}
