@@ -4,4 +4,5 @@ var now = new Date();
 var difference = now - begin;
 var days = difference / 1000 / 3600 / 24;
 var percentage = days / 365 * 100;
-timeBox.innerHTML = (percentage.toFixed(2) + "%");
+timeBox.innerHTML = (percentage.toFixed(2) + "%" + "<br>");
+timeBox.innerHTML = timeBox.innerHTML + (percentage + "%");
