@@ -165,14 +165,20 @@ function checkCollisions(){
 }
 
 function checkCollisionsWithBodyParts(){
+    var snake1ReadyToPop = false;
+    var snake2ReadyToPop = false;
     for(var i = 1; i < bodyParts.length; i++){
-        if((bodyParts[HEAD_INDEX].x === bodyParts[i].x) && (bodyParts[HEAD_INDEX].y === bodyParts[i].y)) gameRunning = false;
-        if((bodyParts2[HEAD_INDEX].x === bodyParts[i].x) && (bodyParts2[HEAD_INDEX].y === bodyParts[i].y)) gameRunning = false;
+        if((bodyParts[HEAD_INDEX].x === bodyParts[i].x) && (bodyParts[HEAD_INDEX].y === bodyParts[i].y)){
+          snake1ReadyToPop = true;
+        }
+        if((bodyParts2[HEAD_INDEX].x === bodyParts[i].x) && (bodyParts2[HEAD_INDEX].y === bodyParts[i].y)) snake2ReadyToPop = true;
     }
     for(i = 1; i < bodyParts2.length; i++){
-        if((bodyParts[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts[HEAD_INDEX].y === bodyParts2[i].y)) gameRunning = false;
-        if((bodyParts2[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts2[HEAD_INDEX].y === bodyParts2[i].y)) gameRunning = false; 
+        if((bodyParts[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts[HEAD_INDEX].y === bodyParts2[i].y)) snake1ReadyToPop = true;
+        if((bodyParts2[HEAD_INDEX].x === bodyParts2[i].x) && (bodyParts2[HEAD_INDEX].y === bodyParts2[i].y)) snake2ReadyToPop = true; 
     }
+    if(snake1ReadyToPop) bodyParts.pop();
+    if(snake2ReadyToPop) bodyParts2.pop();
     if (!gameRunning)db("Game Over! Press any key to play again.");
 }
 
