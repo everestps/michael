@@ -8,7 +8,7 @@ function displayPercentage(){
   var days = difference / 1000 / 3600 / 24;
   var percentage = days / 365 * 100;
   timeBox.innerHTML = "Year: " + percentage.toFixed(2) + "%<br>";
-  timeBox.innerHTML = timeBox.innerHTML + "&nbsp;&nbsp;&nbsp;&nbsp;: " + percentage.toFixed(6) + "%<br>";
+  timeBox.innerHTML = timeBox.innerHTML + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: " + percentage.toFixed(6) + "%<br>";
   var schoolYearStart = new Date(2014, 8, 18);
   var schoolYearEnd = new Date(2015, 5, 22);
   var schoolLength = schoolYearEnd.getTime() - schoolYearStart.getTime();
