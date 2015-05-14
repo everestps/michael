@@ -10,7 +10,7 @@ function displayPercentage(){
   timeBox.innerHTML = percentage.toFixed(2) + "%<br>";
   timeBox.innerHTML = timeBox.innerHTML + percentage.toFixed(6) + "%<br>";
   var schoolYearStart = new Date(2014, 8, 18);
-  var schoolYearEnd = new Date(2015, 6, 11);
+  var schoolYearEnd = new Date(2015, 5, 22);
   var schoolLength = schoolYearEnd.getTime() - schoolYearStart.getTime();
   var lengthThroughSchoolYear = now.getTime() - schoolYearStart.getTime();
   var percentageThroughSchoolYear = lengthThroughSchoolYear / schoolLength * 100;
